@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Overview Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* ================= THEME ================= */
+body.light{
+  background: linear-gradient(135deg,#FFF8E7,#D2B48C,#8B4513);
+  color:#4B2E2B;
+}
+body.dark{
+  background: linear-gradient(135deg,#121212,#2c1f1a,#4a2f24);
+  color:#FFF8E7;
+}
+*{transition:.3s ease}
+
+/* ================= GLASS ================= */
+.glass{
+  backdrop-filter: blur(18px);
+  background: rgba(255,255,255,.25);
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:1rem;
+  box-shadow:0 12px 35px rgba(0,0,0,.25);
+}
+body.dark .glass{
+  background: rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* ================= SIDEBAR ================= */
+aside{
+  width:16rem;
+  transition:.4s ease;
+}
+aside.collapsed{width:80px;}
+aside.collapsed span{display:none;}
+aside a{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  padding:.8rem 1rem;
+  border-radius:.75rem;
+  cursor:pointer;
+  opacity:.8;
+  transform:translateX(-10px);
+}
+aside a.active{
+  background: linear-gradient(90deg,#6F4E37,#D2B48C,#A0522D);
+  color:white;
+  opacity:1;
+  transform:translateX(0);
+}
+aside a.show{opacity:1; transform:translateX(0);}
+aside a:hover{background: rgba(255,255,255,.25);}
+
+/* ================= BUTTONS ================= */
+.btn{
+  background:linear-gradient(90deg,#6F4E37,#D2B48C,#A0522D);
+  background-size:300%;
+  animation:grad 4s linear infinite;
+  color:white;
+  padding:.45rem .95rem;
+  border-radius:.6rem;
+  font-weight:600;
+}
+.btn:hover{transform:scale(1.05)}
+@keyframes grad{0%{background-position:0%}100%{background-position:300%}}
+
+.btn-outline-green{border:1px solid #22c55e;color:#16a34a}
+.btn-outline-red{border:1px solid #ef4444;color:#dc2626}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+/* ================= STATS ================= */
+.stat:hover{
+  transform:translateY(-6px) scale(1.03);
+}
+
+/* ================= MODAL ================= */
+#overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;z-index:40;
+}
+#overlay.show{opacity:1;pointer-events:auto}
+
+#modal{
+  position:fixed;left:50%;bottom:-100%;
+  transform:translateX(-50%) scale(.94);
+  opacity:0;z-index:50;width:90%;max-width:480px;
+}
+#modal.show{
+  bottom:50%;transform:translate(-50%,50%) scale(1);opacity:1;
+}
+
+/* ================= PAGE TRANSITION ================= */
+.section{
+  opacity:0;
+  transform:translateY(10px);
+}
+.section.show{
+  opacity:1;
+  transform:none;
+}
+</style>
+</head>
+
+<body class="light font-sans">
+
+<div class="flex min-h-screen gap-4">
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="glass p-4 space-y-2">
+  <button class="btn w-full mb-2" onclick="toggleSidebar()">☰</button>
+  <a class="active show" onclick="nav('Overview',this)"><i class="fa fa-chart-line"></i><span>Overview</span></a>
+  <a onclick="nav('Products',this)"><i class="fa fa-box"></i><span>Products</span></a>
+  <a onclick="nav('Partnerships',this)"><i class="fa fa-handshake"></i><span>Partnerships</span></a>
+  <a onclick="nav('Users',this)"><i class="fa fa-users"></i><span>Users</span></a>
+  <a onclick="nav('Reports',this)"><i class="fa fa-file"></i><span>Reports</span></a>
+</aside>
+
+<!-- MAIN -->
+<main class="flex-1 glass p-6 space-y-6">
+
+<!-- HEADER -->
+<div class="flex justify-between items-center">
+  <h1 id="pageTitle" class="text-2xl font-bold">Admin Overview</h1>
+  <div class="flex gap-2">
+    <button id="themeToggle" class="glass px-4 py-2 text-xl"><i class="fa fa-sun"></i></button>
+    <button class="btn" onclick="openModal('Date range coming soon 🔥')">Date</button>
+  </div>
+</div>
+
+<!-- SECTION -->
+<div id="content" class="section show space-y-6">
+
+<!-- STATS -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
+    <div id="statPending" class="text-2xl font-bold">4</div>
+    Pending Products
+  </div>
+  <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
+    <div id="statUsers" class="text-2xl font-bold">12</div>
+    New Users
+  </div>
+  <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
+    <div id="statRequests" class="text-2xl font-bold">7</div>
+    Open Requests
+  </div>
+  <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
+    <div id="statFlags" class="text-2xl font-bold">3</div>
+    Flags
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="glass p-6">
+  <h2 class="text-xl font-semibold mb-4">Recent Product Submissions</h2>
+  <div id="productList" class="space-y-3">
+    <p class="opacity-60">Loading products...</p>
+  </div>
+</div>
+
+<!-- PARTNERSHIPS -->
+<div class="glass p-6">
+  <h2 class="text-xl font-semibold mb-4">Recent Partnership Requests</h2>
+  <div id="requestList" class="space-y-3">
+    <p class="opacity-60">Loading requests...</p>
+  </div>
+</div>
+
+</div>
+</main>
+</div>
+
+<!-- MODAL -->
+<div id="overlay"></div>
+<div id="modal">
+  <div class="glass p-6 space-y-4">
+    <h3 class="font-semibold">Preview</h3>
+    <p id="modalText"></p>
+    <button class="btn w-full" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+
+fetch("../backend/admin/admin_dashboard.php")
+  .then(res => res.json())
+  .then(data => {
+    const productList = document.getElementById("productList");
+    productList.innerHTML = "";
+
+    if (!data.recentProducts || data.recentProducts.length === 0) {
+      productList.innerHTML = "<p class='opacity-60'>No pending products</p>";
+      return;
+    }
+
+    data.recentProducts.forEach(p => {
+      const item = document.createElement("div");
+      item.className = "item flex justify-between items-center p-4 border border-dashed rounded";
+
+      item.innerHTML = `
+        <span>
+          <strong>${p.product_name}</strong><br>
+          <small class="opacity-60">Vendor: ${p.vendor_name}</small>
+        </span>
+        <div class="flex gap-2">
+          <button class="btn" onclick="openModal('Review Product: ${p.product_name}')">Review</button>
+          <button class="btn-outline-green px-3 rounded" onclick="approveProduct(${p.ad_id}, this.closest('.item'))">Approve</button>
+          <button class="btn-outline-red px-3 rounded" onclick="rejectProduct(${p.ad_id}, this.closest('.item'))">Reject</button>
+        </div>
+      `;
+
+      productList.appendChild(item);
+    });
+  });
+
+function approveProduct(adId, itemEl) {
+  fetch("/cafes_platform/backend/admin/approve_product.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ad_id: adId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      itemEl.remove(); // remove from list
+    }
+  });
+}
+
+function rejectProduct(adId, itemEl) {
+  fetch("/cafes_platform/backend/admin/reject_product.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ad_id: adId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      itemEl.remove(); // remove from list
+    }
+  });
+}
+
+function updateProductStatus(adId, status, btn){
+  fetch("../backend/admin/update_product_status.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ad_id: adId, status })
+  })
+  .then(res => res.json())
+  .then(resp => {
+    if(resp.success){
+      btn.closest(".item").style.opacity = 0.5;
+      btn.closest(".item").querySelectorAll("button").forEach(b => b.disabled = true);
+      openModal(`Product ${status} ✅`);
+    } else {
+      openModal("Action failed ❌");
+    }
+  });
+}
+
+fetch("../backend/admin/admin_dashboard.php")
+  .then(res => res.json())
+  .then(data => {
+
+    /* ======================
+       PARTNERSHIP REQUESTS
+    ====================== */
+    const requestList = document.getElementById("requestList");
+    requestList.innerHTML = "";
+
+    if (!data.recentRequests || data.recentRequests.length === 0) {
+      requestList.innerHTML = "<p class='opacity-60'>No pending requests</p>";
+      return;
+    }
+
+    data.recentRequests.forEach(r => {
+      const item = document.createElement("div");
+      item.className = "item flex justify-between items-center p-4 border border-dashed rounded";
+
+      item.innerHTML = `
+        <div>
+          <strong>${r.cafe_owner}</strong>
+          <span class="opacity-60"> ← ${r.vendor_name}</span>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="btn" onclick="openModal('Review partnership request')">
+            Review
+          </button>
+
+          <button class="btn-outline-green px-3 rounded"
+            onclick="approveRequest(${r.request_id}, this.closest('.item'))">
+            Approve
+          </button>
+
+          <button class="btn-outline-red px-3 rounded"
+            onclick="rejectRequest(${r.request_id}, this.closest('.item'))">
+            Reject
+          </button>
+        </div>
+      `;
+
+      requestList.appendChild(item);
+    });
+  });
+
+function approveRequest(id, el) {
+  fetch("/cafes_platform/backend/admin/approve_partnership.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request_id: id })
+  })
+  .then(res => res.json())
+  .then(resp => {
+    if (resp.success) {
+      el.remove();
+      openModal("Partnership Approved ✅");
+    }
+  });
+}
+
+function rejectRequest(id, el) {
+  fetch("/cafes_platform/backend/admin/reject_partnership.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request_id: id })
+  })
+  .then(res => res.json())
+  .then(resp => {
+    if (resp.success) {
+      el.remove();
+      openModal("Partnership Rejected ❌");
+    }
+  });
+}
+
+
+/* THEME */
+themeToggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  document.body.classList.toggle("light");
+  themeToggle.innerHTML=document.body.classList.contains("dark")
+    ?'<i class="fa fa-moon"></i>'
+    :'<i class="fa fa-sun"></i>';
+};
+
+/* SIDEBAR */
+function toggleSidebar(){
+  sidebar.classList.toggle("collapsed");
+}
+
+/* NAVIGATION */
+function nav(name,el){
+  document.querySelectorAll('aside a').forEach(a=>a.classList.remove('active','show'));
+  el.classList.add('active');
+  setTimeout(()=>el.classList.add('show'),50);
+  pageTitle.textContent=`Admin ${name}`;
+  content.classList.remove("show");
+  setTimeout(()=>content.classList.add("show"),150);
+}
+
+/* MODAL */
+function openModal(text){
+  modalText.textContent=text;
+  overlay.classList.add("show");
+  modal.classList.add("show");
+}
+function closeModal(){
+  overlay.classList.remove("show");
+  modal.classList.remove("show");
+}
+overlay.onclick=closeModal;
+
+/* STATS */
+
+
+
+</script>
+</body>
+</html>

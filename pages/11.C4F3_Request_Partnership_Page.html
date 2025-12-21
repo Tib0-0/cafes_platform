@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Partnership Form</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        coffee: '#6F4E37',
+        mocha: '#8B5E3C',
+        cream: '#F8F3EE',
+        caramel: '#D2B48C'
+      }
+    }
+  }
+}
+</script>
+
+<style>
+/* ========= Animated Gradient Button (Google / FB style) ========= */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-action-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  font-weight: 600;
+  color: #FFF8E7;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(
+    60deg,
+    #6F4E37,
+    #D2B48C,
+    #A0522D,
+    #8B4513
+  );
+  background-size: 400% 400%;
+  animation: gradientMove 4s linear infinite;
+  transition: all 0.3s ease-in-out;
+}
+
+.gradient-action-btn::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: inherit;
+  background-size: 400% 400%;
+  animation: gradientMove 4s linear infinite;
+  filter: blur(15px);
+  z-index: -1;
+  border-radius: 1rem;
+}
+
+.gradient-action-btn:hover {
+  transform: scale(1.03);
+  box-shadow:
+    0 0 15px rgba(255,248,231,0.5),
+    0 0 25px rgba(111,78,55,0.5);
+}
+
+/* ========= Preview Animation ========= */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.preview-animate {
+  animation: fadeUp 0.35s ease-out forwards;
+}
+</style>
+</head>
+
+<body class="bg-cream font-sans flex justify-center p-8">
+
+<div class="w-full max-w-3xl bg-white p-6 md:p-8 border border-gray-200 shadow-lg rounded-lg relative">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
+        <h1 class="text-xl md:text-2xl font-semibold text-gray-800">
+            Request Partnership
+        </h1>
+
+        <!-- 🔥 DRAFT BUTTON (NOW ANIMATED LIKE GOOGLE / FB) -->
+        <button type="button"
+            class="gradient-action-btn text-sm px-4 py-2 opacity-90 hover:opacity-100">
+            Draft
+        </button>
+    </div>
+
+    <!-- Form -->
+    <form id="partnershipForm" class="space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                <select id="product" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-md text-sm
+                    focus:outline-none focus:ring-2 focus:ring-coffee">
+                <option value="">Select Product</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+                <select id="vendor" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-md text-sm
+                    focus:outline-none focus:ring-2 focus:ring-coffee">
+                <option value="">Select Vendor</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+            <textarea id="message" rows="5" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-md text-sm resize-none
+                focus:outline-none focus:ring-2 focus:ring-coffee"></textarea>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Terms</label>
+            <textarea id="terms" rows="5"
+                class="w-full px-4 py-3 border border-gray-300 rounded-md text-sm resize-none
+                focus:outline-none focus:ring-2 focus:ring-coffee"></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4 pt-4">
+            <button type="button" id="previewBtn"
+                class="gradient-action-btn">
+                Preview
+            </button>
+
+            <button type="submit"
+                class="gradient-action-btn">
+                Send Request
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal"
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden backdrop-blur-sm">
+
+    <!-- 🔥 TRANSPARENT PREVIEW CONTAINER -->
+    <div class="bg-white/80 rounded-2xl shadow-2xl w-full max-w-2xl p-6
+                border border-coffee/40 backdrop-blur-xl preview-animate relative">
+
+        <button id="closePreview"
+            class="absolute top-3 right-4 text-2xl font-bold text-coffee hover:text-mocha">
+            &times;
+        </button>
+
+        <h2 class="text-xl font-bold text-coffee mb-4">Live Preview</h2>
+        <div id="previewContent" class="space-y-3 text-gray-800"></div>
+    </div>
+</div>
+
+<script>
+const previewBtn = document.getElementById('previewBtn');
+const previewModal = document.getElementById('previewModal');
+const previewContent = document.getElementById('previewContent');
+const closePreview = document.getElementById('closePreview');
+
+const vendor = document.getElementById("vendor");
+const product = document.getElementById("product");
+const message = document.getElementById("message");
+const terms = document.getElementById("terms");
+
+/* =========================
+   PREVIEW
+========================= */
+function updatePreview() {
+  previewContent.innerHTML = `
+    <p><strong>Product:</strong> ${product.options[product.selectedIndex]?.text || '<em>—</em>'}</p>
+    <p><strong>Vendor:</strong> ${vendor.options[vendor.selectedIndex]?.text || '<em>—</em>'}</p>
+    <p><strong>Message:</strong> ${message.value || '<em>—</em>'}</p>
+    <p><strong>Terms:</strong> ${terms.value || '<em>—</em>'}</p>
+  `;
+}
+
+previewBtn.onclick = () => {
+  updatePreview();
+  previewModal.classList.remove('hidden');
+};
+
+closePreview.onclick = () => previewModal.classList.add('hidden');
+previewModal.onclick = e => e.target === previewModal && previewModal.classList.add('hidden');
+
+/* =========================
+   SUBMIT PARTNERSHIP REQUEST
+========================= */
+document.getElementById("partnershipForm").onsubmit = e => {
+  e.preventDefault();
+
+  fetch("../backend/partnership/create_request.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      vendor_id: vendor.value,
+      product_ad_id: product.value,
+      message: message.value,
+      terms: terms.value
+    })
+  })
+  .then(res => res.text()) // 👈 TEMP
+  .then(text => {
+    console.log("RAW RESPONSE:", text);
+    try {
+      const data = JSON.parse(text);
+      if (data.success) {
+        alert("Request Sent ✅");
+        e.target.reset();
+      } else {
+        alert(data.message || "Failed ❌");
+      }
+    } catch {
+      alert("Server error — check console");
+    }
+  });
+};
+
+/* =========================
+   LOAD VENDORS
+========================= */
+fetch("../backend/partnership/get_vendors.php")
+  .then(res => res.json())
+  .then(vendors => {
+    vendor.innerHTML = `<option value="">Select Vendor</option>`;
+    vendors.forEach(v => {
+      vendor.innerHTML += `
+        <option value="${v.user_id}">${v.username}</option>
+      `;
+    });
+  });
+
+/* =========================
+   LOAD PRODUCTS
+========================= */
+let allProducts = [];
+
+fetch("../backend/partnership/get_products.php")
+  .then(res => res.json())
+  .then(products => {
+    allProducts = products;
+
+    product.innerHTML = `<option value="">Select Product</option>`;
+    products.forEach(p => {
+      product.innerHTML += `
+        <option value="${p.ad_id}" data-vendor="${p.vendor_id}">
+          ${p.product_name}
+        </option>
+      `;
+    });
+  });
+
+  product.addEventListener("change", () => {
+  const selected = product.options[product.selectedIndex];
+  const vendorId = selected.getAttribute("data-vendor");
+
+  if (vendorId) {
+    vendor.value = vendorId;
+  }
+});
+
+vendor.addEventListener("change", () => {
+  const vid = vendor.value;
+
+  product.innerHTML = `<option value="">Select Product</option>`;
+
+  allProducts
+    .filter(p => p.vendor_id == vid)
+    .forEach(p => {
+      product.innerHTML += `
+        <option value="${p.ad_id}" data-vendor="${p.vendor_id}">
+          ${p.product_name}
+        </option>
+      `;
+    });
+});
+
+</script>
+
+</body>
+</html>

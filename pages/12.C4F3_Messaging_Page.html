@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real-Time Messaging Interface</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* --- Coffee Gradient / Glow Buttons --- */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  font-weight: 600;
+  color: #FFF8E7;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(60deg, #6F4E37, #D2B48C, #A0522D, #8B4513);
+  background-size: 400% 400%;
+  animation: gradientMove 4s linear infinite;
+  transition: all 0.3s ease-in-out;
+}
+.gradient-btn::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: inherit;
+  background-size: 400% 400%;
+  animation: gradientMove 4s linear infinite;
+  filter: blur(15px);
+  z-index: -1;
+  border-radius: 1rem;
+}
+.gradient-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px rgba(210,105,30,0.6), 0 0 30px rgba(111,78,55,0.5);
+}
+
+/* --- Chat Bubbles --- */
+.outgoing {
+  background: linear-gradient(135deg, #6F4E37, #A0522D);
+  color: #FFF8E7;
+  border-radius: 1rem 1rem 0 1rem;
+  padding: 0.75rem 1rem;
+  max-width: 70%;
+  box-shadow: 0 3px 8px rgba(111,78,55,0.3);
+  position: relative;
+  word-break: break-word;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+.incoming {
+  background: linear-gradient(135deg, #F8F3EE, #D2B48C);
+  color: #4B2E2B;
+  border-radius: 1rem 1rem 1rem 0;
+  padding: 0.75rem 1rem;
+  max-width: 70%;
+  box-shadow: 0 3px 8px rgba(210,180,140,0.3);
+  word-break: break-word;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+.outgoing:hover, .incoming:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 15px rgba(255,248,231,0.5), 0 0 25px rgba(111,78,55,0.5);
+}
+
+/* --- Fade-in animation --- */
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+.chat-animate { animation: fadeUp 0.5s ease-out forwards; }
+
+/* --- Message timestamp --- */
+.message-time { font-size:0.65rem; opacity:0.7; text-align:right; margin-top:0.25rem; }
+
+/* --- Typing indicator --- */
+.typing { display:flex; gap:4px; }
+.typing-dot { width:6px; height:6px; background:#6F4E37; border-radius:50%; animation: blink 1s infinite; }
+.typing-dot:nth-child(2){ animation-delay:0.2s; }
+.typing-dot:nth-child(3){ animation-delay:0.4s; }
+@keyframes blink {0%,80%,100%{opacity:0;} 40%{opacity:1;} }
+
+/* --- Dark Mode --- */
+.dark-mode { background-color:#1f1f1f; color:#f3f3f3; }
+.dark-mode .bg-white { background-color:#2a2a2a !important; }
+.dark-mode .bg-gray-200 { background-color:#3a3a3a !important; color:#f3f3f3; }
+.dark-mode .border-gray-200 { border-color:#555 !important; }
+.dark-mode .focus\:ring-coffee { --tw-ring-color: #D2B48C; }
+
+/* --- Emoji Picker --- */
+.emoji-picker {
+  position: absolute; bottom:60px; right:20px;
+  background:white; border-radius:1rem; padding:0.5rem;
+  display:none; grid-template-columns: repeat(6, 1fr); gap:0.25rem;
+  box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:100;
+}
+.emoji-picker span { cursor:pointer; font-size:1.2rem; transition: transform 0.2s; }
+.emoji-picker span:hover { transform: scale(1.3); }
+
+#chatMessages { scroll-behavior: smooth; }
+</style>
+</head>
+<body class="bg-cream font-sans p-4 md:p-8 transition-colors duration-300">
+
+<div class="flex justify-end mb-4">
+  <button id="toggleDark" class="gradient-btn text-sm">Toggle Dark Mode</button>
+</div>
+
+<div class="container mx-auto max-w-7xl bg-[#FFF8E7] border border-[#D2B48C] shadow-lg rounded-lg flex h-[80vh]">
+
+  <!-- Chat List -->
+  <div class="w-full md:w-80 flex-shrink-0 border-r border-[#D2B48C] flex flex-col bg-[#F8F3EE] rounded-l-lg">
+    <div class="p-4 border-b border-[#D2B48C] h-20 flex items-center">
+      <input type="text" placeholder="Search conversations" 
+             class="w-full p-2 border border-dashed border-[#D2B48C] focus:outline-none text-sm rounded-md bg-[#FFF8E7]">
+    </div>
+    <div class="flex-grow overflow-y-auto space-y-2 p-4" id="chatList">
+      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg bg-[#FFF8E7] cursor-pointer chat-item" data-chat="Vendor A">
+        <span class="font-semibold text-[#4B2E2B]">Vendor A</span>
+        <span class="badge px-2 py-0.5 text-xs font-bold text-white bg-blue-500 rounded-full">2</span>
+      </div>
+      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg hover:bg-[#F0E5D8] cursor-pointer chat-item" data-chat="Cafe B">
+        <span class="font-medium text-[#4B2E2B]">Cafe B</span>
+        <span class="badge w-2 h-2 bg-red-500 rounded-full"></span>
+      </div>
+      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg hover:bg-[#F0E5D8] cursor-pointer chat-item" data-chat="Admin">
+        <span class="font-medium text-[#4B2E2B]">Admin</span>
+        <span class="badge px-2 py-0.5 text-xs font-bold text-white bg-blue-500 rounded-full">1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="flex-grow flex flex-col bg-[#FFF8E7] rounded-r-lg">
+    <div class="p-4 border-b border-[#D2B48C] flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-[#4B2E2B]" id="chatTitle">Chat with Vendor A</h2>
+      <button class="gradient-btn" id="newMessageBtn">New Message</button>
+    </div>
+
+    <div class="flex-grow p-6 overflow-y-auto space-y-4" id="chatMessages"></div>
+
+    <!-- Chat Input with Emoji -->
+    <div class="p-4 border-t border-[#D2B48C] flex items-center relative">
+      <input type="text" placeholder="Type a message" id="chatInput"
+             class="flex-grow p-3 border border-[#D2B48C] focus:outline-none focus:ring-2 focus:ring-coffee rounded-l-md text-sm bg-[#FFF8E7]">
+      <button id="emojiBtn" class="gradient-btn mx-2 rounded-full text-lg">😀</button>
+      <button id="sendBtn" class="gradient-btn rounded-r-md">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Emoji Picker -->
+<div id="emojiPicker" class="emoji-picker grid hidden">
+  <span>😀</span><span>😂</span><span>😍</span><span>👍</span><span>🎉</span><span>🙌</span>
+  <span>😢</span><span>😎</span><span>😡</span><span>👏</span><span>💯</span><span>🔥</span>
+</div>
+
+<script>
+const chats = {
+  "Vendor A": [
+    { text: "Hi there!", me: false, time: "09:20", reactions: [] },
+    { text: "Can we ship weekly?", me: false, time: "09:21", reactions: [] }
+  ],
+  "Cafe B": [],
+  "Admin": []
+};
+let activeChat = "Vendor A";
+
+const chatMessages = document.getElementById("chatMessages");
+const chatTitle = document.getElementById("chatTitle");
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatItems = document.querySelectorAll(".chat-item");
+const newMessageBtn = document.getElementById("newMessageBtn");
+const toggleDarkBtn = document.getElementById("toggleDark");
+const emojiPicker = document.getElementById("emojiPicker");
+const emojiBtn = document.getElementById("emojiBtn");
+
+// --- Render Chat ---
+function renderChat(name){
+  chatMessages.innerHTML = "";
+  chats[name].forEach(msg => addMessage(msg.text,msg.me,msg.time));
+  chatTitle.textContent = "Chat with " + name;
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// --- Add Message ---
+function addMessage(text, me=true, time=null){
+  const msgTime = time || new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `flex ${me?'justify-end':'justify-start'} chat-animate message-container`;
+
+  const bubble = document.createElement("div");
+  bubble.className = me ? "outgoing" : "incoming";
+  bubble.innerHTML = `<span class="message-text">${text}</span>
+                      <div class="message-time">${msgTime}</div>`;
+  msgDiv.appendChild(bubble);
+  chatMessages.appendChild(msgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// --- Send Message ---
+sendBtn.addEventListener("click",()=>{
+  const text = chatInput.value.trim();
+  if(!text) return;
+  addMessage(text,true);
+  chats[activeChat].push({text,me:true,time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),reactions:[]});
+  chatInput.value="";
+  simulateIncomingMessage(activeChat);
+});
+
+// --- Switch Chat ---
+chatItems.forEach(item=>{
+  item.addEventListener("click",()=>{
+    activeChat=item.dataset.chat;
+    renderChat(activeChat);
+  });
+});
+
+// --- New Message Button ---
+newMessageBtn.addEventListener("click",()=>chatInput.focus());
+
+// --- Dark Mode ---
+toggleDarkBtn.addEventListener("click",()=>{document.body.classList.toggle("dark-mode");});
+
+// --- Emoji Picker ---
+emojiBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  emojiPicker.style.display = emojiPicker.style.display === "grid" ? "none" : "grid";
+});
+emojiPicker.querySelectorAll("span").forEach(emoji => {
+  emoji.addEventListener("click", () => {
+    chatInput.value += emoji.textContent;
+    emojiPicker.style.display = "none";
+    chatInput.focus();
+  });
+});
+document.addEventListener("click", (e) => {
+  if(!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.style.display = "none";
+});
+
+// --- Simulate Incoming Messages ---
+function simulateIncomingMessage(chatName){
+  const typingDiv = document.createElement("div");
+  typingDiv.className="flex justify-start chat-animate";
+  typingDiv.innerHTML=`<div class="incoming p-3 max-w-md rounded-xl rounded-tl-none shadow-sm">
+    <div class="typing">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+  </div>`;
+  chatMessages.appendChild(typingDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  setTimeout(()=>{
+    chatMessages.removeChild(typingDiv);
+    const replies = ["Got it! ✅","Thanks!","Will do.","👌","Noted!"];
+    const reply = replies[Math.floor(Math.random()*replies.length)];
+    addMessage(reply,false);
+    chats[chatName].push({text:reply,me:false,time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),reactions:[]});
+  },1500+Math.random()*1500);
+}
+
+// --- Initial Render ---
+renderChat(activeChat);
+</script>
+</body>
+</html>

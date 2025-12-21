@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coffee Shop Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* ======================= Floating label ======================= */
+    .floating-input:focus~label,
+    .floating-input:not(:placeholder-shown)~label {
+      transform: translateY(-1.5rem) scale(0.85);
+      color: #D2691E;
+    }
+
+    /* ======================= Animations ======================= */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* ======================= Buttons ======================= */
+    .gradient-button {
+      position: relative;
+      overflow: hidden;
+      z-index: 0;
+      border-radius: 1rem;
+      background: linear-gradient(to right, rgba(255, 248, 231, 0.2), rgba(255, 248, 231, 0.2));
+    }
+
+    .gradient-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, #A0522D, #D2691E, #8B4513, #A0522D);
+      background-size: 400% 400%;
+      animation: gradientMove 4s linear infinite;
+      z-index: -1;
+      filter: blur(10px);
+      border-radius: 1rem;
+    }
+
+    .gradient-button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px rgba(160, 82, 45, 0.7), 0 0 30px rgba(210, 105, 30, 0.5);
+    }
+
+    /* ======================= Password Toggle ======================= */
+    .password-wrapper {
+      position: relative;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 1rem;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #FFF8E7aa;
+      transition: color 0.2s ease;
+    }
+
+    .toggle-password:hover {
+      color: #FFF8E7;
+    }
+
+    /* ======================= Social Buttons ======================= */
+    .social-gradient {
+      position: relative;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      background: linear-gradient(60deg, #6F4E37, #D2B48C, #A0522D, #8B4513);
+      background-size: 400% 400%;
+      animation: gradientMove 4s linear infinite;
+      padding: 0.5rem 1rem;
+      color: #FFF8E7;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .social-gradient::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: inherit;
+      background-size: 400% 400%;
+      animation: gradientMove 4s linear infinite;
+      z-index: -1;
+      filter: blur(15px);
+      border-radius: 0.75rem;
+    }
+
+    .social-gradient:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(255, 248, 231, 0.7);
+    }
+
+    /* ======================= Role Buttons Glassmorphic ======================= */
+    .glass-btn {
+      position: relative;
+      overflow: hidden;
+      border-radius: 9999px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      padding: 0.5rem 1.5rem;
+      font-weight: 600;
+      color: #FFF8E7;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+      z-index: 0;
+    }
+
+    .glass-btn::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, #6F4E37, #D2B48C, #A0522D, #8B4513);
+      background-size: 400% 400%;
+      animation: gradientMove 4s linear infinite;
+      z-index: -1;
+      filter: blur(15px);
+      border-radius: 9999px;
+    }
+
+    .glass-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 248, 231, 0.5);
+    }
+
+    .glass-btn.selected {
+      background: rgba(255, 248, 231, 0.25);
+      color: #FFF8E7;
+      border-color: #D2691E;
+      box-shadow: 0 0 15px rgba(210, 105, 30, 0.8);
+    }
+
+    /* ======================= Modal ======================= */
+    .modal-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-in-out;
+      z-index: 50;
+    }
+
+    .modal-bg.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 2rem;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transform: translateY(-50px) scale(0.95);
+      opacity: 0;
+    }
+
+    .modal-bg.active .modal-card {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .modal-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #FFF8E7;
+      margin-bottom: 1rem;
+    }
+
+    .modal-text {
+      color: #FFF8E7;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ======================= Confetti ======================= */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #FFD700;
+      top: 0;
+      left: 50%;
+      pointer-events: none;
+      opacity: 0.8;
+      z-index: 100;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      100% {
+        transform: translateY(600px) rotate(720deg);
+      }
+    }
+
+    /* ======================= Password Strength ======================= */
+    .strength-bar {
+      height: 6px;
+      border-radius: 0.5rem;
+      background: rgba(255, 255, 255, 0.3);
+      margin-top: 0.25rem;
+      overflow: hidden;
+    }
+
+    .strength-bar-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease-in-out;
+      border-radius: 0.5rem;
+    }
+
+    .strength-weak {
+      background-color: #FF4D4D;
+    }
+
+    .strength-medium {
+      background-color: #FFD700;
+    }
+
+    .strength-strong {
+      background-color: #00FF7F;
+    }
+
+    .strength-text {
+      font-size: 0.85rem;
+      color: #FFF8E7;
+      margin-top: 0.25rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-tr from-[#6F4E37] to-[#D2B48C] flex items-center justify-center min-h-screen font-sans">
+
+  <div class="w-full max-w-md mx-auto">
+    <div class="relative bg-white/15 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-10 animate-fade-in-up">
+
+      <!-- Logo -->
+      <div class="flex justify-center mb-6 animate-fade-in-up animate-delay-100">
+        <img src="LOGO_HERE.png"
+          class="h-24 w-24 object-cover rounded-full border-2 border-white/50 shadow-lg transition-transform hover:scale-105" />
+      </div>
+
+      <h2 class="text-3xl font-bold text-white text-center mb-2 animate-fade-in-up animate-delay-200">Create Your Account</h2>
+      <p class="text-center text-white/80 mb-6 animate-fade-in-up animate-delay-300">Join us and start your coffee journey!</p>
+
+      <!-- Role Selection -->
+      <div class="flex justify-center gap-4 mb-4 animate-fade-in-up animate-delay-300">
+        <button type="button" class="role-btn glass-btn" data-role="vendor">Vendor</button>
+        <button type="button" class="role-btn glass-btn" data-role="cafe_owner">Cafe Owner</button>
+      </div>
+
+      <!-- Registration Form -->
+      <form id="registerForm"
+      method="POST"
+      action="../backend/C4F3_Registration.php"
+      class="space-y-6 animate-fade-in-up animate-delay-400">
+
+          <input type="hidden" name="role" id="roleInput" value="">
+
+        <div class="relative">
+          <input type="text" id="businessName" name="business_name"
+            class="floating-input w-full p-4 rounded-lg bg-white/25 text-white placeholder-transparent border border-white/40 focus:outline-none focus:ring-2 focus:ring-[#D2691E] focus:border-[#D2691E]" required />
+          <label class="absolute left-4 top-4 text-white/80 pointer-events-none transition-all">Business Name</label>
+        </div>
+
+        <div class="relative">
+          <input type="email" id="email" name="email"
+            class="floating-input w-full p-4 rounded-lg bg-white/25 text-white placeholder-transparent border border-white/40 focus:outline-none focus:ring-2 focus:ring-[#D2691E] focus:border-[#D2691E]" required />
+          <label class="absolute left-4 top-4 text-white/80 pointer-events-none transition-all">Email</label>
+        </div>
+
+        <div class="relative password-wrapper">
+          <input type="password" id="password" name="password"
+            class="floating-input w-full p-4 rounded-lg bg-white/25 text-white placeholder-transparent border border-white/40 focus:outline-none focus:ring-2 focus:ring-[#D2691E] focus:border-[#D2691E]" required />
+          <label class="absolute left-4 top-4 text-white/80 pointer-events-none transition-all">Password</label>
+          <span id="togglePassword" class="toggle-password">👁️</span>
+          <!-- Password strength -->
+          <div class="strength-bar">
+            <div id="strengthFill" class="strength-bar-fill"></div>
+          </div>
+          <div id="strengthText" class="strength-text"></div>
+        </div>
+
+        <div class="relative password-wrapper">
+          <input type="password" placeholder=" " id="confirmPassword" name="confirm_password"
+            class="floating-input w-full p-4 rounded-lg bg-white/25 text-white placeholder-transparent border border-white/40 focus:outline-none focus:ring-2 focus:ring-[#D2691E] focus:border-[#D2691E]" required />
+          <label class="absolute left-4 top-4 text-white/80 pointer-events-none transition-all">Confirm Password</label>
+          <span id="toggleConfirmPassword" class="toggle-password">👁️</span>
+        </div>
+
+        <!-- Register Button -->
+        <button type="submit" class="w-full gradient-button text-white py-3 font-semibold shadow-lg hover:shadow-xl transition-all">Register</button>
+
+        <!-- Social Login -->
+        <div class="flex justify-center gap-4 mt-4">
+          <a href="#" class="social-gradient">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" alt="Google" class="h-5 w-5"> Google
+          </a>
+          <a href="#" class="social-gradient">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" alt="Facebook" class="h-5 w-5"> Facebook
+          </a>
+        </div>
+
+      </form>
+
+      <p class="mt-8 text-center text-white/80 animate-fade-in-up animate-delay-500">Already have an account? <a href="#"
+          class="text-[#FFF8E7] font-semibold hover:underline">Login</a></p>
+
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="accountModal" class="modal-bg">
+    <div class="modal-card">
+      <h2 class="modal-title">🎉 Account Created!</h2>
+      <p class="modal-text">Your account has been successfully created. Welcome aboard!</p>
+      <button id="closeModal" class="w-full gradient-button text-white py-3 font-semibold shadow-lg hover:shadow-xl transition-all">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // Toggle password
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const confirmInput = document.getElementById('confirmPassword');
+    toggleConfirmPassword.addEventListener('click', () => {
+      const type = confirmInput.type === 'password' ? 'text' : 'password';
+      confirmInput.type = type;
+      toggleConfirmPassword.textContent = type === 'password' ? '👁️' : '🙈';
+    });
+
+    // Role Selection
+    const roleButtons = document.querySelectorAll('.role-btn');
+    const roleInput = document.getElementById('roleInput');
+    roleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        roleButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        roleInput.value = btn.dataset.role;
+      });
+    });
+
+    // Password strength
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    passwordInput.addEventListener('input', () => {
+      const val = passwordInput.value;
+      let strength = 0;
+      if (val.length >= 6) strength++;
+      if (/[A-Z]/.test(val)) strength++;
+      if (/[0-9]/.test(val)) strength++;
+      if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+      if (strength <= 1) {
+        strengthFill.style.width = "25%";
+        strengthFill.className = "strength-bar-fill strength-weak";
+        strengthText.textContent = "Weak (min 6 chars, include number)";
+      } else if (strength <= 3) {
+        strengthFill.style.width = "60%";
+        strengthFill.className = "strength-bar-fill strength-medium";
+        strengthText.textContent = "Medium (add uppercase & special char)";
+      } else {
+        strengthFill.style.width = "100%";
+        strengthFill.className = "strength-bar-fill strength-strong";
+        strengthText.textContent = "Strong ✅";
+      }
+    });
+
+    // Handle registration
+    const form = document.getElementById('registerForm');
+    const modal = document.getElementById('accountModal');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    form.addEventListener('submit', (e) => {
+      if (passwordInput.value !== confirmInput.value) {
+  alert("Passwords do not match!");
+  e.preventDefault();
+  return;
+}
+
+      modal.classList.add('active');
+
+      // Confetti
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
+        confetti.style.animationDuration = 2 + Math.random() * 2 + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 4000);
+      }
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      form.reset();
+      strengthFill.style.width = "0%";
+      strengthText.textContent = "";
+      roleButtons.forEach(b => b.classList.remove('selected'));
+      roleInput.value = "";
+    });
+  </script>
+</body>
+
+</html>

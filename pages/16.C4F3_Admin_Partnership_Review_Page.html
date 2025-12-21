@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Partnership Decision - Coffee Theme</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+    body {
+        background: linear-gradient(135deg, #a9746e, #f4e1d2);
+        position: relative;
+        overflow-x: hidden;
+        min-height: 100vh;
+        font-family: sans-serif;
+        transition: background 0.5s, color 0.5s;
+        color: #3e2f2f;
+    }
+
+    /* Steam Animation */
+    .steam {
+        position: absolute;
+        bottom: 0;
+        width: 20px;
+        height: 80px;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+        border-radius: 50%;
+        opacity: 0.5;
+        animation: rise 6s linear infinite;
+        pointer-events: none;
+    }
+    .steam:nth-child(1) { left: 20%; animation-delay: 0s; }
+    .steam:nth-child(2) { left: 40%; animation-delay: 2s; }
+    .steam:nth-child(3) { left: 60%; animation-delay: 1s; }
+    .steam:nth-child(4) { left: 80%; animation-delay: 3s; }
+
+    @keyframes rise {
+        0% { transform: translateY(0) scaleX(0.5) scaleY(0.5); opacity: 0.3; }
+        50% { transform: translateY(-150px) scaleX(0.7) scaleY(0.7); opacity: 0.5; }
+        100% { transform: translateY(-300px) scaleX(1) scaleY(1); opacity: 0; }
+    }
+
+    /* Glass Cards */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #3e2f2f;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.5s, color 0.5s;
+        position: relative;
+        overflow: hidden;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-3px); }
+        100% { transform: translateY(0px); }
+    }
+
+    /* Coffee cup */
+    .coffee-cup { position: relative; display: inline-block; width: 20px; height: 20px; color: #3e2f2f; }
+    .coffee-cup i { font-size: 20px; }
+    .coffee-cup::before, .coffee-cup::after {
+        content: ''; position: absolute; top: -12px; left: 50%; width: 2px; height: 12px; background: rgba(255,255,255,0.6);
+        border-radius: 50%; transform: translateX(-50%); animation: steamUp 2s infinite ease-in-out;
+    }
+    .coffee-cup::after { left: 60%; animation-delay: 0.5s; }
+
+    @keyframes steamUp {
+        0% { transform: translateY(0) scaleX(0.5); opacity: 0; }
+        50% { transform: translateY(-12px) scaleX(0.7); opacity: 0.5; }
+        100% { transform: translateY(-24px) scaleX(1); opacity: 0; }
+    }
+
+    /* Buttons & Modal */
+    .btn-approve, .btn-reject, .modal button {
+        position: relative;
+        overflow: hidden;
+        transition: background 0.4s, color 0.4s;
+    }
+    .btn-approve, .btn-reject {
+        padding: 0.75rem 1.5rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        color: white;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn-approve { background: linear-gradient(135deg, #56ab2f, #a8e063); }
+    .btn-reject { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+
+    .btn-approve::before, .btn-reject::before, .modal button::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: rgba(255,255,255,0.15);
+        transform: skewX(-20deg);
+        animation: slideGlide 3s linear infinite;
+    }
+    @keyframes slideGlide {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: -100%; }
+    }
+
+    .btn-approve:hover, .btn-reject:hover, .modal button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+    /* Scrollbar */
+    .scrollbar::-webkit-scrollbar { width: 6px; }
+    .scrollbar::-webkit-scrollbar-thumb { background-color: rgba(62, 47, 47, 0.5); border-radius: 3px; }
+
+    textarea { background: rgba(255, 255, 255, 0.8); color: #3e2f2f; transition: background 0.4s, color 0.4s; }
+
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; transition: background 0.4s, color 0.4s; }
+
+    .history-card { backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; transition: transform 0.2s ease, opacity 0.3s ease, background 0.4s, color 0.4s; position: relative; cursor: pointer; opacity: 0; animation: fadeIn 0.5s forwards; }
+    .history-card:hover { transform: translateY(-3px); }
+
+    .tooltip { visibility: hidden; background-color: rgba(62, 47, 47, 0.9); color: #fff; text-align: left; border-radius: 0.5rem; padding: 0.5rem; position: absolute; z-index: 10; top: 100%; left: 50%; transform: translateX(-50%); white-space: pre-line; font-size: 0.875rem; width: 200px; opacity: 0; transition: opacity 0.2s; }
+    .history-card:hover .tooltip { visibility: visible; opacity: 1; }
+
+    .filter-btn { padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-right: 0.5rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); transition: background 0.4s, color 0.4s, border-color 0.4s; }
+    .filter-btn.active { background: rgba(255,255,255,0.25); }
+
+    @keyframes fadeIn { from {opacity:0; transform: translateY(5px);} to {opacity:1; transform: translateY(0);} }
+
+    /* Modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 50; }
+    .modal { background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.2); padding: 2rem; border-radius: 1rem; max-width: 400px; width: 90%; text-align: center; position: relative; color: #3e2f2f; overflow: hidden; transition: background 0.4s, color 0.4s, border-color 0.4s; }
+    .modal::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(255,255,255,0.2); transform: skewX(-20deg); animation: slideGlide 3s linear infinite; pointer-events: none; }
+    .modal h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .modal button { margin-top: 1rem; padding: 0.5rem 1.5rem; border-radius: 1rem; border: none; cursor: pointer; background: #8b5e3c; color: #fff; font-weight: 600; backdrop-filter: blur(10px); }
+
+    /* Slide-Glide Hover for Categories */
+    #requestDetails div.p-4 { position: relative; transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, border 0.3s ease; border: 1px solid rgba(255,255,255,0.2); overflow: hidden; }
+    #requestDetails div.p-4::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(255,255,255,0.2); transform: skewX(-20deg); transition: left 0.5s ease; }
+    #requestDetails div.p-4:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.4); }
+    #requestDetails div.p-4:hover::before { left: 100%; }
+
+    /* Dark/Light Mode Toggle */
+    #themeToggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 100;
+        transition: background 0.4s;
+    }
+    #themeToggle:hover { background: rgba(255,255,255,0.35); }
+    #toggleIcon { font-size: 1.2rem; transition: transform 0.4s, color 0.4s; }
+</style>
+</head>
+<body>
+
+<!-- Dark/Light Mode Toggle -->
+<div id="themeToggle">
+    <i id="toggleIcon" class="fas fa-sun text-yellow-500"></i>
+</div>
+
+<!-- Background Steam -->
+<div class="steam"></div>
+<div class="steam"></div>
+<div class="steam"></div>
+<div class="steam"></div>
+
+<div class="container mx-auto max-w-7xl p-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Request Details -->
+        <div id="requestDetails" class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-4">
+            <h2 class="text-xl font-bold border-b border-white/30 pb-2 mb-4 flex items-center gap-2">
+                <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
+                Request Details
+            </h2>
+            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-coffee"></i> Cafe</div>
+            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-store"></i> Vendor</div>
+            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-box"></i> Product</div>
+            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-handshake"></i> Proposed Terms</div>
+            <div class="p-4 h-48 rounded-md bg-white/10 flex items-center justify-center text-sm scrollbar overflow-y-auto flex-col">
+                <i class="fas fa-comment-alt mb-2"></i> Messages
+                <div class="mt-2 text-left text-xs">
+                    <p><strong>Vendor:</strong> Can we adjust delivery schedule?</p>
+                    <p><strong>Cafe:</strong> Sure, we can manage next week.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision & Notes -->
+        <div class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-6">
+            <div class="border-b border-white/30 pb-4">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
+                    Decision 
+                    <span id="statusBadge" class="status-badge bg-gray-300 text-gray-800">Pending</span>
+                </h2>
+                <div class="flex space-x-4 flex-wrap">
+                    <button id="approveBtn" class="btn-approve"><i class="fas fa-check"></i> Approve</button>
+                    <button id="rejectBtn" class="btn-reject"><i class="fas fa-times"></i> Reject</button>
+                </div>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
+                    Internal Note
+                </h2>
+                <textarea id="internalNote" placeholder="Enter internal notes..." rows="6"
+                    class="w-full px-4 py-3 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-yellow-300"></textarea>
+                <div class="mt-2 text-sm text-white/80" id="notePreview">Live preview of your notes...</div>
+            </div>
+        </div>
+
+        <!-- History Panel -->
+        <div class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-4">
+            <h2 class="text-xl font-bold border-b border-white/30 pb-2 mb-4 flex items-center gap-2">
+                <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
+                Decision History
+            </h2>
+            <div class="mb-4 flex flex-wrap gap-2">
+                <span class="filter-btn active" data-filter="all">All</span>
+                <span class="filter-btn" data-filter="Approved">Approved</span>
+                <span class="filter-btn" data-filter="Rejected">Rejected</span>
+            </div>
+            <div id="historyList" class="overflow-y-auto max-h-[400px] lg:max-h-[500px] scrollbar"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal-bg flex">
+    <div class="modal">
+        <h2 id="modalTitle">Preview</h2>
+        <p id="modalNote"></p>
+        <button id="modalCloseBtn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+const approveBtn = document.getElementById('approveBtn');
+const rejectBtn = document.getElementById('rejectBtn');
+const statusBadge = document.getElementById('statusBadge');
+const noteArea = document.getElementById('internalNote');
+const notePreview = document.getElementById('notePreview');
+const historyList = document.getElementById('historyList');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const modalNote = document.getElementById('modalNote');
+
+const historyEntries = [];
+
+function addHistoryEntry(action, note) {
+    const timestamp = new Date().toLocaleString();
+    const entry = { action, note, timestamp };
+    historyEntries.unshift(entry);
+    renderHistory(document.querySelector('.filter-btn.active').dataset.filter);
+}
+
+function renderHistory(filter='all') {
+    historyList.innerHTML = '';
+    historyEntries.forEach(entry => {
+        if(filter !== 'all' && entry.action !== filter) return;
+
+        const card = document.createElement('div');
+        card.className = 'history-card text-white/90';
+        let bgColor = entry.action === 'Approved' ? 'rgba(72, 187, 120, 0.2)' :
+                      entry.action === 'Rejected' ? 'rgba(244, 115, 32, 0.2)' :
+                      'rgba(255,255,255,0.1)';
+        card.style.background = bgColor;
+
+        const icon = entry.action === 'Approved' ? '<i class="fas fa-check"></i>' :
+                     entry.action === 'Rejected' ? '<i class="fas fa-times"></i>' :
+                     '<i class="fas fa-hourglass-half"></i>';
+
+        card.innerHTML = `
+            <div class="flex justify-between items-center mb-1">
+                <span class="font-semibold">${icon} ${entry.action}</span>
+                <span class="text-xs">${entry.timestamp}</span>
+            </div>
+            <div class="tooltip">${entry.note || 'No note provided.'}</div>
+        `;
+        historyList.appendChild(card);
+    });
+}
+
+function openModal(title, note, actionColor) {
+    modalTitle.textContent = title;
+    modalNote.textContent = note || 'No note provided.';
+    modal.style.display = 'flex';
+    if(actionColor === 'Approved') {
+        modal.style.background = 'rgba(72, 187, 120, 0.25)';
+        modal.style.borderColor = 'rgba(72, 187, 120, 0.5)';
+    } else if(actionColor === 'Rejected') {
+        modal.style.background = 'rgba(244, 115, 32, 0.25)';
+        modal.style.borderColor = 'rgba(244, 115, 32, 0.5)';
+    } else {
+        modal.style.background = 'rgba(255,255,255,0.15)';
+        modal.style.borderColor = 'rgba(255,255,255,0.2)';
+    }
+}
+
+function closeModal() {
+    modal.style.display = 'none';
+}
+
+approveBtn.addEventListener('click', () => {
+    statusBadge.textContent = "Approved";
+    statusBadge.className = "status-badge bg-green-500 text-white";
+    addHistoryEntry("Approved", noteArea.value);
+    openModal("Approve Preview", noteArea.value, "Approved");
+});
+
+rejectBtn.addEventListener('click', () => {
+    statusBadge.textContent = "Rejected";
+    statusBadge.className = "status-badge bg-red-500 text-white";
+    addHistoryEntry("Rejected", noteArea.value);
+    openModal("Reject Preview", noteArea.value, "Rejected");
+});
+
+noteArea.addEventListener('input', () => {
+    notePreview.textContent = noteArea.value || "Live preview of your notes...";
+});
+
+filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderHistory(btn.dataset.filter);
+    });
+});
+
+// Dark/Light Toggle
+const toggle = document.getElementById('themeToggle');
+const toggleIcon = document.getElementById('toggleIcon');
+let darkMode = false;
+
+function applyTheme() {
+    if(darkMode){
+        document.body.style.background = 'linear-gradient(135deg, #2c2c2c, #1a1a1a)';
+        document.body.style.color = '#f5f5f5';
+        toggleIcon.className = 'fas fa-moon text-gray-200';
+        document.querySelectorAll('.glass-card, .modal, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
+            el.style.backgroundColor = 'rgba(255,255,255,0.05)';
+            el.style.color = '#f5f5f5';
+            el.style.borderColor = 'rgba(255,255,255,0.2)';
+        });
+        document.querySelectorAll('.filter-btn').forEach(el => {
+            el.style.borderColor = 'rgba(255,255,255,0.3)';
+            el.style.color = '#f5f5f5';
+        });
+        document.querySelector('textarea').style.backgroundColor = 'rgba(255,255,255,0.1)';
+        document.querySelector('textarea').style.color = '#f5f5f5';
+        document.getElementById('notePreview').style.color = '#f5f5f5';
+    } else {
+        document.body.style.background = 'linear-gradient(135deg, #a9746e, #f4e1d2)';
+        document.body.style.color = '#3e2f2f';
+        toggleIcon.className = 'fas fa-sun text-yellow-500';
+        document.querySelectorAll('.glass-card, .modal, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
+            el.style.backgroundColor = 'rgba(255,255,255,0.15)';
+            el.style.color = '#3e2f2f';
+            el.style.borderColor = 'rgba(255,255,255,0.2)';
+        });
+        document.querySelectorAll('.filter-btn').forEach(el => {
+            el.style.borderColor = 'rgba(255,255,255,0.3)';
+            el.style.color = '#3e2f2f';
+        });
+        document.querySelector('textarea').style.backgroundColor = 'rgba(255,255,255,0.8)';
+        document.querySelector('textarea').style.color = '#3e2f2f';
+        document.getElementById('notePreview').style.color = '#ffffffcc';
+    }
+}
+
+toggle.addEventListener('click', () => {
+    darkMode = !darkMode;
+    applyTheme();
+});
+
+// Initialize theme
+applyTheme();
+</script>
+
+</body>
+</html>

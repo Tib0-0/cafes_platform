@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Coffee Shop — Homepage + Modals</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* --- Theme & animations (coffee) --- */
+  :root{
+    --coffee-1:#6F4E37;
+    --coffee-2:#D2B48C;
+    --coffee-3:#A0522D;
+    --coffee-4:#8B4513;
+    --cream:#FFF8E7;
+  }
+  body{background:linear-gradient(135deg,var(--coffee-1),var(--coffee-2));min-height:100vh;color:var(--cream);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+  @keyframes gradientMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  .bg-coffee-gradient{background:linear-gradient(60deg,var(--coffee-3),var(--coffee-2),var(--coffee-4),var(--coffee-3));background-size:400% 400%;animation:gradientMove 6s linear infinite}
+  .glass-card{backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(255,248,231,0.08);border:1px solid rgba(255,248,231,0.12)}
+  .btn-coffee{position:relative;overflow:hidden;border-radius:.75rem;padding:.6rem 1rem;font-weight:600;color:var(--cream);background:rgba(255,248,231,0.06);border:1px solid rgba(255,248,231,0.14)}
+  .btn-coffee::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(60deg,var(--coffee-3),var(--coffee-2),var(--coffee-4),var(--coffee-3));background-size:400% 400%;filter:blur(12px);z-index:-1;animation:gradientMove 6s linear infinite;border-radius:.75rem}
+  .btn-coffee:hover{transform:scale(1.03);box-shadow:0 0 18px rgba(160,82,45,0.6)}
+  /* social animated button (same as login/register) */
+  .social-gradient{position:relative;overflow:hidden;border-radius:.75rem;padding:.5rem 1rem;display:inline-flex;align-items:center;gap:.5rem;justify-content:center;font-weight:600;color:var(--cream);background:linear-gradient(60deg,var(--coffee-1),var(--coffee-2),var(--coffee-3),var(--coffee-4));background-size:400% 400%;animation:gradientMove 4s linear infinite}
+  .social-gradient::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:inherit;background-size:400% 400%;filter:blur(14px);z-index:-1;border-radius:.75rem}
+  .social-gradient:hover{transform:scale(1.02);box-shadow:0 0 15px rgba(255,248,231,0.4)}
+  /* animated card fade */
+  @keyframes fadeInUp{0%{opacity:0;transform:translateY(20px) scale(.98)}100%{opacity:1;transform:none}}
+  .fade-up{animation:fadeInUp .6s ease-out both}
+  /* floating input label */
+  .floating-input:focus + label,
+  .floating-input:not(:placeholder-shown) + label{transform:translateY(-1.35rem) scale(.85);color:var(--coffee-3)}
+  .floating-input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08)}
+  /* modal layout */
+  .modal-bg{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:60}
+  .modal-open{display:flex}
+  /* strength bar */
+  .strength-bar{height:8px;border-radius:999px;background:rgba(255,255,255,0.12);overflow:hidden}
+  .strength-fill{height:100%;width:0%;transition:width .25s ease;border-radius:999px}
+  .s-weak{background:#FF4D4D}
+  .s-medium{background:#FFD700}
+  .s-strong{background:#22c55e}
+  /* icon button */
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:transparent;border:0;color:var(--cream);cursor:pointer}
+  /* small tweaks */
+  input::placeholder{color:transparent}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="w-full glass-card p-4 shadow-md fixed top-4 left-0 right-0 mx-auto max-w-6xl rounded-xl z-40">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="px-3 py-2 rounded-md bg-white/10 text-sm font-bold text-white">Coffee Logo</div>
+        <!-- PRODUCTS / VENDORS / HOW IT WORKS placed beside logo -->
+        <nav class="hidden md:flex items-center gap-4 text-white/90">
+          <a href="#" class="px-3 py-1 rounded-md hover:bg-white/6 transition">Products</a>
+          <a href="#" class="px-3 py-1 rounded-md hover:bg-white/6 transition">Vendors</a>
+          <a href="#" class="px-3 py-1 rounded-md hover:bg-white/6 transition">How it works?</a>
+        </nav>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="openLoginBtn" class="px-4 py-2 rounded-md border border-white/20 hover:bg-white/6 transition">Login</button>
+      <button id="openRegisterBtn" class="px-4 py-2 rounded-md bg-coffee-gradient text-white shadow-sm transition">Register</button>
+    </div>
+  </div>
+</header>
+
+<!-- main container (give top padding for fixed navbar) -->
+<main class="max-w-6xl mx-auto px-6 pt-28">
+
+  <!-- section: hero + stats column on the right -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+    <!-- hero (left, spans 2 on lg) -->
+    <div class="lg:col-span-2 glass-card p-6 rounded-xl shadow-lg fade-up">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="col-span-1">
+          <div class="w-full h-64 rounded-lg bg-white/6 border border-white/12 flex items-center justify-center text-white/80 text-xl">
+            Hero Illustration
+          </div>
+          <p class="mt-4 text-white/80">Connect cafe owners with trusted vendors. Discover, compare, and partner easily.</p>
+
+          <div class="flex gap-3 mt-6">
+            <button class="btn-coffee">Explore Products</button>
+            <button class="btn-coffee">Become a Vendor</button>
+          </div>
+
+          <div class="flex gap-3 mt-4">
+            <a class="social-gradient" href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" class="h-5 w-5" alt="Google">Google</a>
+            <a class="social-gradient" href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" class="h-5 w-5" alt="Facebook">Facebook</a>
+          </div>
+        </div>
+
+        <!-- on small screens show stats below hero content; on large screens left column here remains hero main area -->
+        <div class="col-span-1 lg:hidden mt-4">
+          <!-- small stats stacked -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="glass-card p-3 rounded-md text-center">Stat A</div>
+            <div class="glass-card p-3 rounded-md text-center">Stat B</div>
+            <div class="glass-card p-3 rounded-md text-center">Stat C</div>
+            <div class="glass-card p-3 rounded-md text-center">Stat D</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- stats column (right on lg) -->
+    <aside class="glass-card p-4 rounded-xl shadow-lg space-y-4 fade-up">
+      <h3 class="text-lg font-semibold">Key Metrics</h3>
+      <div class="grid gap-3">
+        <div class="p-4 rounded-md bg-white/6 border border-white/12">
+          <div class="text-sm text-white/80">Vendors</div>
+          <div class="text-2xl font-bold">1,234</div>
+        </div>
+        <div class="p-4 rounded-md bg-white/6 border border-white/12">
+          <div class="text-sm text-white/80">Cafes</div>
+          <div class="text-2xl font-bold">567</div>
+        </div>
+        <div class="p-4 rounded-md bg-white/6 border border-white/12">
+          <div class="text-sm text-white/80">Products</div>
+          <div class="text-2xl font-bold">8,901</div>
+        </div>
+        <div class="p-4 rounded-md bg-white/6 border border-white/12">
+          <div class="text-sm text-white/80">Orders / mo</div>
+          <div class="text-2xl font-bold">12,345</div>
+        </div>
+      </div>
+    </aside>
+
+  </section>
+
+  <!-- additional content -->
+  <section class="mt-8">
+    <div class="glass-card p-6 rounded-xl shadow-lg fade-up">
+      <h4 class="text-xl font-semibold">Why CoffeeShop?</h4>
+      <p class="text-white/80 mt-2">A short paragraph where you highlight the benefits and features. Testimonials, featured vendors, or CTA can go here.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- LOGIN MODAL (full login page design inside modal) -->
+<div id="loginModal" class="modal-bg" aria-hidden="true">
+  <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+    <div class="flex justify-center mb-4">
+      <img src="LOGO_HERE.png" alt="Logo" class="h-20 w-20 rounded-full border border-white/20" />
+    </div>
+    <h2 class="text-2xl font-bold text-center mb-1">Welcome Back</h2>
+    <p class="text-center text-white/80 mb-4">Login to your account securely</p>
+
+    <form id="loginForm" class="space-y-4">
+      <div class="relative">
+        <input id="loginEmail" type="email" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none transition">Email</label>
+      </div>
+
+      <div class="relative password-wrapper">
+        <input id="loginPassword" type="password" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none transition">Password</label>
+        <!-- eye toggle (SVG) -->
+        <button type="button" class="icon-btn absolute right-3 top-3" id="loginToggle" aria-label="Toggle password">
+          <!-- eye open SVG -->
+          <svg id="loginEyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <svg id="loginEyeClosed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.88 9.88A3 3 0 0012 15a3 3 0 003-3c0-.38-.07-.74-.2-1.06"/></svg>
+        </button>
+
+        <!-- strength meter shown while typing -->
+        <div class="mt-2">
+          <div class="strength-bar"><div id="loginStrength" class="strength-fill"></div></div>
+          <div id="loginStrengthText" class="text-sm text-white/80 mt-1"></div>
+        </div>
+      </div>
+
+      <button id="loginSubmit" type="submit" class="w-full gradient-button py-2 rounded-lg text-white font-semibold">Login</button>
+
+      <div class="flex items-center my-3 text-white/60"><hr class="flex-grow border-white/10"/><span class="mx-2 text-sm">or</span><hr class="flex-grow border-white/10"/></div>
+
+      <div class="flex gap-3 justify-center">
+        <a href="#" class="social-gradient"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" class="h-4 w-4" alt=""> Google</a>
+        <a href="#" class="social-gradient"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" class="h-4 w-4" alt=""> Facebook</a>
+      </div>
+
+      <p class="text-center text-sm text-white/70 mt-3">Don't have an account? <button type="button" id="openRegisterFromLogin" class="text-white font-medium underline">Register</button></p>
+    </form>
+
+    <div class="mt-4">
+      <button id="closeLogin" class="w-full py-2 rounded-md bg-white/5">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER MODAL (full register design inside modal) -->
+<div id="registerModal" class="modal-bg" aria-hidden="true">
+  <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+    <div class="flex justify-center mb-4">
+      <img src="LOGO_HERE.png" alt="Logo" class="h-20 w-20 rounded-full border border-white/20" />
+    </div>
+    <h2 class="text-2xl font-bold text-center mb-1">Create Account</h2>
+    <p class="text-center text-white/80 mb-4">Join our coffee community</p>
+
+    <form id="registerForm" class="space-y-4">
+      <div class="relative">
+        <input id="regName" type="text" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none">Full name</label>
+      </div>
+
+      <div class="relative">
+        <input id="regEmail" type="email" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none">Email</label>
+      </div>
+
+      <div class="relative password-wrapper">
+        <input id="regPassword" type="password" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none">Password</label>
+        <button type="button" class="icon-btn absolute right-3 top-3" id="regToggle" aria-label="Toggle password">
+          <svg id="regEyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <svg id="regEyeClosed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.88 9.88A3 3 0 0012 15a3 3 0 003-3c0-.38-.07-.74-.2-1.06"/></svg>
+        </button>
+
+        <div class="mt-2">
+          <div class="strength-bar"><div id="regStrength" class="strength-fill"></div></div>
+          <div id="regStrengthText" class="text-sm text-white/80 mt-1"></div>
+        </div>
+      </div>
+
+      <div class="relative password-wrapper">
+        <input id="regConfirm" type="password" placeholder=" " class="floating-input w-full p-3 rounded-lg" required />
+        <label class="absolute left-3 top-3 text-white/80 pointer-events-none">Confirm Password</label>
+        <button type="button" class="icon-btn absolute right-3 top-3" id="regConfirmToggle" aria-label="Toggle confirm password">
+          <svg id="regConfEyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <svg id="regConfEyeClosed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/><path stroke="#FFF8E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.88 9.88A3 3 0 0012 15a3 3 0 003-3c0-.38-.07-.74-.2-1.06"/></svg>
+        </button>
+      </div>
+
+      <button id="registerSubmit" type="submit" class="w-full gradient-button py-2 rounded-lg text-white font-semibold disabled:opacity-50" disabled>Register</button>
+
+      <div class="flex gap-3 justify-center mt-2">
+        <a class="social-gradient" href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" class="h-4 w-4" alt=""> Google</a>
+        <a class="social-gradient" href="#"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png" class="h-4 w-4" alt=""> Facebook</a>
+      </div>
+
+      <p class="text-center text-sm text-white/70 mt-3">Already have an account? <button type="button" id="openLoginFromRegister" class="text-white underline">Login</button></p>
+    </form>
+
+    <div class="mt-4">
+      <button id="closeRegister" class="w-full py-2 rounded-md bg-white/5">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- scripts -->
+<script>
+  // Modal open/close
+  const loginModal = document.getElementById('loginModal');
+  const registerModal = document.getElementById('registerModal');
+  const openLoginBtn = document.getElementById('openLoginBtn');
+  const openRegisterBtn = document.getElementById('openRegisterBtn');
+  const closeLogin = document.getElementById('closeLogin');
+  const closeRegister = document.getElementById('closeRegister');
+  const openRegisterFromLogin = document.getElementById('openRegisterFromLogin');
+  const openLoginFromRegister = document.getElementById('openLoginFromRegister');
+
+  function showModal(modal){
+    modal.classList.add('modal-open');
+    modal.setAttribute('aria-hidden','false');
+  }
+  function hideModal(modal){
+    modal.classList.remove('modal-open');
+    modal.setAttribute('aria-hidden','true');
+  }
+
+  openLoginBtn.addEventListener('click', ()=> showModal(loginModal));
+  openRegisterBtn.addEventListener('click', ()=> showModal(registerModal));
+  closeLogin.addEventListener('click', ()=> hideModal(loginModal));
+  closeRegister.addEventListener('click', ()=> hideModal(registerModal));
+  openRegisterFromLogin.addEventListener('click',(e)=>{ e.preventDefault(); hideModal(loginModal); showModal(registerModal); });
+  openLoginFromRegister.addEventListener('click',(e)=>{ e.preventDefault(); hideModal(registerModal); showModal(loginModal); });
+
+  // Close modal when clicking outside content
+  document.querySelectorAll('.modal-bg').forEach(bg=>{
+    bg.addEventListener('click', (e)=>{
+      if(e.target === bg) hideModal(bg);
+    });
+  });
+
+  // --- Password show/hide (login) ---
+  const loginToggle = document.getElementById('loginToggle');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginEyeOpen = document.getElementById('loginEyeOpen');
+  const loginEyeClosed = document.getElementById('loginEyeClosed');
+
+  loginToggle.addEventListener('click', ()=>{
+    if(loginPassword.type === 'password'){
+      loginPassword.type = 'text';
+      loginEyeOpen.classList.add('hidden');
+      loginEyeClosed.classList.remove('hidden');
+    } else {
+      loginPassword.type = 'password';
+      loginEyeOpen.classList.remove('hidden');
+      loginEyeClosed.classList.add('hidden');
+    }
+  });
+
+  // --- Password show/hide (register) ---
+  const regToggle = document.getElementById('regToggle');
+  const regPassword = document.getElementById('regPassword');
+  const regEyeOpen = document.getElementById('regEyeOpen');
+  const regEyeClosed = document.getElementById('regEyeClosed');
+
+  const regConfToggle = document.getElementById('regConfirmToggle');
+  const regConfirm = document.getElementById('regConfirm');
+  const regConfEyeOpen = document.getElementById('regConfEyeOpen');
+  const regConfEyeClosed = document.getElementById('regConfEyeClosed');
+
+  regToggle.addEventListener('click', ()=>{
+    if(regPassword.type === 'password'){
+      regPassword.type = 'text';
+      regEyeOpen.classList.add('hidden');
+      regEyeClosed.classList.remove('hidden');
+    } else {
+      regPassword.type = 'password';
+      regEyeOpen.classList.remove('hidden');
+      regEyeClosed.classList.add('hidden');
+    }
+  });
+  regConfToggle.addEventListener('click', ()=>{
+    if(regConfirm.type === 'password'){
+      regConfirm.type = 'text';
+      regConfEyeOpen.classList.add('hidden');
+      regConfEyeClosed.classList.remove('hidden');
+    } else {
+      regConfirm.type = 'password';
+      regConfEyeOpen.classList.remove('hidden');
+      regConfEyeClosed.classList.add('hidden');
+    }
+  });
+
+  // --- Password strength checker (register) ---
+  const regStrength = document.getElementById('regStrength');
+  const regStrengthText = document.getElementById('regStrengthText');
+  const registerSubmit = document.getElementById('registerSubmit');
+
+  function calcStrength(val){
+    let score = 0;
+    if(val.length >= 8) score++;
+    if(/[A-Z]/.test(val)) score++;
+    if(/[0-9]/.test(val)) score++;
+    if(/[^A-Za-z0-9]/.test(val)) score++;
+    return score; // 0..4
+  }
+
+  regPassword.addEventListener('input', ()=>{
+    const v = regPassword.value;
+    const s = calcStrength(v);
+
+    if(s <= 1){
+      regStrength.style.width = '20%';
+      regStrength.className = 'strength-fill s-weak';
+      regStrengthText.textContent = 'Weak — use 8+ chars, number, uppercase';
+      registerSubmit.disabled = true;
+    } else if(s === 2 || s === 3){
+      regStrength.style.width = '60%';
+      regStrength.className = 'strength-fill s-medium';
+      regStrengthText.textContent = 'Medium — add uppercase & special char';
+      registerSubmit.disabled = true; // require strong to enable
+    } else {
+      regStrength.style.width = '100%';
+      regStrength.className = 'strength-fill s-strong';
+      regStrengthText.textContent = 'Strong — good to go';
+      // only enable if confirm matches too
+      registerSubmit.disabled = (regConfirm.value !== v);
+    }
+  });
+
+  // sync confirm check
+  regConfirm.addEventListener('input', ()=>{
+    const matches = regConfirm.value === regPassword.value && regPassword.value.length>0;
+    // only enable if password is strong
+    const strong = regStrength.classList.contains('s-strong');
+    registerSubmit.disabled = !(matches && strong);
+  });
+
+  // --- Password strength for login (visual only) ---
+  const loginStrength = document.getElementById('loginStrength');
+  const loginStrengthText = document.getElementById('loginStrengthText');
+  loginPassword.addEventListener('input', ()=>{
+    const v = loginPassword.value;
+    const s = calcStrength(v);
+    if(s <= 1){
+      loginStrength.style.width = '20%'; loginStrength.className = 'strength-fill s-weak'; loginStrengthText.textContent = 'Weak';
+    } else if(s === 2 || s === 3){
+      loginStrength.style.width = '60%'; loginStrength.className = 'strength-fill s-medium'; loginStrengthText.textContent = 'Medium';
+    } else {
+      loginStrength.style.width = '100%'; loginStrength.className = 'strength-fill s-strong'; loginStrengthText.textContent = 'Strong';
+    }
+  });
+
+  // optional: prevent real submit (demo)
+  document.getElementById('registerForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if(registerSubmit.disabled) return alert('Please fix password requirements and matching confirm password.');
+    alert('Registered (demo). You can now call your API here.');
+    hideModal(registerModal);
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    alert('Login (demo). Submit to your auth endpoint here.');
+    hideModal(loginModal);
+  });
+
+  // keyboard escape to close modals
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape'){
+      hideModal(loginModal); hideModal(registerModal);
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Partner Request Review</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+body {
+    background: linear-gradient(135deg, #f7f3ee, #f2e6d9);
+    font-family: 'Inter', sans-serif;
+}
+
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: #4CAF50;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: 0.4s;
+    z-index: 1000;
+    font-weight: 600;
+}
+
+.toast.error { background: #EF4444; }
+
+.card-header {
+    background: linear-gradient(90deg, #A0522D, #D2691E);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    font-weight: 600;
+}
+
+.card-content {
+    padding: 1rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    background-color: #FFF8E7; /* soft coffee background */
+}
+
+.history-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    background: #E5E7EB;
+    color: #374151;
+}
+
+[contenteditable]:focus {
+    outline: 2px solid #D2691E;
+    background-color: rgba(210, 105, 30, 0.1);
+    transition: 0.2s;
+}
+
+/* Coffee Gradient Buttons */
+.gradient-action-btn {
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+    border-radius: 1rem;
+    background: linear-gradient(to right, rgba(255,248,231,0.2), rgba(255,248,231,0.2));
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.gradient-action-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: linear-gradient(60deg, #A0522D, #D2691E, #8B4513, #A0522D);
+    background-size: 400% 400%;
+    animation: gradientMove 4s linear infinite;
+    z-index: -1;
+    filter: blur(10px);
+    border-radius: 1rem;
+}
+
+.gradient-action-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(210,105,30,0.6), 0 0 25px rgba(160,82,45,0.5);
+}
+
+/* Gradient Animation */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+</style>
+</head>
+<body class="p-8">
+
+<div class="container mx-auto max-w-4xl space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Request Details -->
+        <div class="shadow-xl rounded-xl overflow-hidden border border-gray-200" id="requestCard">
+            <div class="card-header text-lg">Request Details</div>
+            <div class="card-content space-y-4">
+                <div class="flex flex-col space-y-1">
+                    <span class="text-gray-500 text-sm">Cafe Name</span>
+                    <input type="text" id="cafeName" class="w-full p-3 border border-gray-300 text-gray-700 font-medium rounded-md bg-white" value="Cafe Aroma" />
+                </div>
+                <div class="flex flex-col space-y-1">
+                    <span class="text-gray-500 text-sm">Requested Product</span>
+                    <input type="text" id="productName" class="w-full p-3 border border-gray-300 text-gray-700 font-medium rounded-md bg-white" value="Arabica Beans 1kg" />
+                </div>
+                <div class="flex flex-col space-y-1">
+                    <span class="text-gray-500 text-sm">Proposed Terms (editable)</span>
+                    <textarea id="terms" contenteditable="true" class="w-full p-3 border border-gray-300 text-gray-700 rounded-md bg-white">Monthly Supply, Net 30 Payment</textarea>
+                </div>
+                <div class="flex flex-col space-y-1">
+                    <span class="text-gray-500 text-sm">Message (editable)</span>
+                    <textarea id="message" contenteditable="true" class="w-full h-40 p-3 border border-gray-300 text-gray-700 rounded-md bg-white">Hello, we are interested in partnering for your Arabica beans. Please let us know the terms.</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions & History -->
+        <div class="shadow-xl rounded-xl overflow-hidden border border-gray-200 flex flex-col justify-between">
+            <div class="card-content space-y-6">
+                <div class="flex flex-col space-y-3 md:flex-row md:space-y-0 md:space-x-3">
+
+                    <button id="approveBtn" class="gradient-action-btn">Approve</button>
+                    <button id="rejectBtn" class="gradient-action-btn">Reject</button>
+                    <button id="saveBtn" class="gradient-action-btn">Save Changes</button>
+
+                    <!-- Export Dropdown -->
+                    <div class="relative inline-block flex-1">
+                        <button id="exportBtn" class="gradient-action-btn w-full flex justify-between items-center">
+                            Export ▼
+                        </button>
+                        <div id="exportDropdown" class="absolute right-0 mt-2 w-full rounded-xl overflow-hidden hidden z-50 flex flex-col space-y-1">
+                            <button id="exportCSV" class="gradient-action-btn w-full text-left px-4 py-2">CSV</button>
+                            <button id="exportPDF" class="gradient-action-btn w-full text-left px-4 py-2">PDF</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- History -->
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">History</h2>
+                    <div id="historyContainer" class="space-y-3">
+                        <div class="flex items-center justify-between p-3 border border-gray-300 text-gray-700 rounded-md bg-white">
+                            <span class="font-medium">Request Sent</span>
+                            <span class="history-badge">2025-02-01</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// Toast function
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = type === 'error' ? 'toast error' : 'toast';
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
+
+// Add history
+const historyContainer = document.getElementById('historyContainer');
+function addHistory(action) {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between p-3 border border-gray-300 text-gray-700 rounded-md bg-white';
+    div.innerHTML = `<span class="font-medium">${action}</span><span class="history-badge">${dateStr}</span>`;
+    historyContainer.prepend(div);
+}
+
+// Actions
+document.getElementById('approveBtn').addEventListener('click', () => {
+    showToast('Request Approved ✅');
+    addHistory('Request Approved');
+});
+
+document.getElementById('rejectBtn').addEventListener('click', () => {
+    showToast('Request Rejected ❌', 'error');
+    addHistory('Request Rejected');
+});
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+    const termsText = document.getElementById('terms').value.trim();
+    const messageText = document.getElementById('message').value.trim();
+    if(!termsText && !messageText) {
+        showToast('Nothing to save!', 'error');
+        return;
+    }
+    showToast('Changes Saved 💾');
+    addHistory('Changes Saved');
+});
+
+// Export Dropdown
+const exportBtn = document.getElementById('exportBtn');
+const exportDropdown = document.getElementById('exportDropdown');
+
+exportBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    exportDropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', () => {
+    exportDropdown.classList.add('hidden');
+});
+
+// Export CSV
+document.getElementById('exportCSV').addEventListener('click', () => {
+    const cafeName = document.getElementById('cafeName').value.trim();
+    const productName = document.getElementById('productName').value.trim();
+    const terms = document.getElementById('terms').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const csv = `Cafe Name,Requested Product,Proposed Terms,Message\n"${cafeName}","${productName}","${terms}","${message}"`;
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'Partnership_Request.csv';
+    link.click();
+    showToast('CSV Exported 📄');
+    exportDropdown.classList.add('hidden');
+});
+
+// Export PDF
+document.getElementById('exportPDF').addEventListener('click', () => {
+    const element = document.getElementById('requestCard');
+    html2pdf().from(element).save('Partnership_Request.pdf');
+    showToast('PDF Exported 📄');
+    exportDropdown.classList.add('hidden');
+});
+</script>
+
+</body>
+</html>

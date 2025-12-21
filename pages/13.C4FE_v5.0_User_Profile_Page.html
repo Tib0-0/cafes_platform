@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multi-Tenant SaaS Profile</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+/* ================= THEME ================= */
+body.light { background: linear-gradient(135deg,#FFF8E7,#D2B48C,#8B4513); color:#4B2E2B; }
+body.dark { background: linear-gradient(135deg,#121212,#2c1f1a,#4a2f24); color:#FFF8E7; }
+
+/* ================= GLASS ================= */
+.glass{ backdrop-filter:blur(20px); background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); border-radius:1rem; box-shadow:0 8px 30px rgba(0,0,0,0.25); transition:.3s; }
+body.dark .glass { background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color: #FFF8E7; }
+
+/* ================= BUTTON ================= */
+.btn{ background:linear-gradient(90deg,#6F4E37,#D2B48C,#A0522D); background-size:300%; animation:grad 4s linear infinite; color:white; padding:.7rem 1.4rem; border-radius:.75rem; font-weight:600; transition:.3s; }
+.btn:hover{transform:scale(1.05)}
+@keyframes grad{0%{background-position:0%}100%{background-position:300%}}
+#logoutBtn{ font-weight:600; text-shadow:0 0 3px rgba(0,0,0,0.3); }
+
+/* ================= LOCK ================= */
+.locked{opacity:.5;pointer-events:none}
+
+/* ================= POPUP ================= */
+#overlay, #overlayCats{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:1;pointer-events:auto;transition:.4s;z-index:40;display:none;}
+#preview, #popupCats{position:fixed;left:50%;transform:translateX(-50%);opacity:1;transition:.5s ease;z-index:50;width:90%;max-width:520px;display:none;}
+#popupCats{bottom:-100%;transition:bottom .3s ease-in-out;}
+#popupCats.show{bottom:50%;transform:translate(-50%,50%);}
+
+/* ================= SAVE CHANGES SMOOTH PREVIEW MODAL ================= */
+#preview {
+  bottom: -100%;
+  opacity: 0;
+  transform: translate(-50%, 70%) scale(0.95);
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out, bottom 0.5s ease-out;
+}
+#preview.show {
+  bottom: 50%;
+  opacity: 1;
+  transform: translate(-50%, 50%) scale(1);
+}
+#preview .glass {
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+body.dark #preview .glass {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #FFF8E7;
+}
+#preview h3 { font-size:1.2rem; margin-bottom:.75rem; }
+#preview p { margin-bottom:.5rem; }
+#preview button {
+  width: 100%;
+  background: linear-gradient(90deg,#6F4E37,#D2B48C,#A0522D);
+  background-size: 300%;
+  animation:grad 4s linear infinite;
+  color:white;
+  padding:.7rem 1.4rem;
+  border-radius:.75rem;
+  font-weight:600;
+  border:none;
+  cursor:pointer;
+  transition: transform 0.3s ease;
+}
+#preview button:hover{ transform: scale(1.05); }
+
+/* ================= TOGGLE ================= */
+#themeToggle i{transition:.4s}
+
+/* ================= INPUTS ================= */
+input, select, textarea{ background: rgba(255,255,255,0.3); border-radius:0.5rem; border:none; padding:0.5rem; width:100%; color: inherit; }
+body.dark input, body.dark select, body.dark textarea{ background: rgba(255,255,255,0.1); color: #FFF8E7; }
+
+/* ================= IOS-STYLE TOGGLE SWITCH ================= */
+.switch { position: relative; display: inline-block; width: 52px; height: 28px; margin-right: 10px; vertical-align: middle;}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: 0.4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: 0.4s; }
+input:checked + .slider { background-color: #6F4E37; }
+input:checked + .slider:before { transform: translateX(24px); }
+.switch-label { display: flex; align-items: center; cursor: pointer; font-weight:500; user-select:none; margin-bottom:6px; }
+
+/* ================= CATEGORIES ALIGNMENT ================= */
+#popupCats .glass label { display: flex; justify-content: space-between; align-items: center; margin: 6px 0; cursor: pointer; }
+#popupCats .glass label span { flex: 1; }
+#popupCats .glass label input[type="checkbox"] { margin:0; flex-shrink:0; width:20px; height:20px; }
+#popupCats .glass { max-height: unset; overflow-y: visible; }
+#catsDropdown{text-align:left; white-space:normal;}
+</style>
+</head>
+<body class="light p-6">
+
+<!-- AUTH -->
+<div id="auth" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <div class="glass p-6 w-full max-w-sm space-y-4 text-center">
+    <h2 class="text-xl font-semibold">Login</h2>
+    <input id="email" placeholder="Email" class="w-full p-2 rounded">
+    <select id="role" class="w-full p-2 rounded">
+      <option value="admin">Admin</option>
+      <option value="vendor">Vendor</option>
+      <option value="viewer">Viewer</option>
+    </select>
+    <input id="tenant" placeholder="Tenant ID (e.g cafe_001)" class="w-full p-2 rounded">
+    <button class="btn w-full" onclick="login()">Login</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-6 space-x-2">
+  <div id="badge" class="glass px-4 py-2 text-sm"></div>
+  <div class="flex items-center space-x-2">
+    <button id="themeToggle" class="glass px-4 py-2 text-xl">
+      <i class="fa-solid fa-sun"></i>
+    </button>
+    <button id="logoutBtn" class="btn hidden">Logout</button>
+  </div>
+</div>
+
+<!-- MAIN GRID CONTAINER -->
+<div class="grid md:grid-cols-5 gap-6 w-full max-w-full">
+
+  <!-- BUSINESS INFO -->
+  <div class="glass p-6 md:col-span-3 space-y-3" id="business">
+    <h2 class="text-xl font-semibold">Business Info</h2>
+    <input id="bName" placeholder="Business Name" class="w-full p-2 rounded">
+    <input id="bRole" placeholder="Your Role" class="w-full p-2 rounded">
+    <input id="bEmail" placeholder="Email" class="w-full p-2 rounded">
+    <input id="bPhone" placeholder="Phone" class="w-full p-2 rounded">
+    <button class="btn w-full" onclick="save()">Save Changes</button>
+  </div>
+
+  <!-- PREFERENCES -->
+  <div class="glass p-6 md:col-span-2 space-y-3" id="prefs">
+    <h2 class="text-xl font-semibold">Preferences</h2>
+
+    <label class="switch-label">
+      <span class="switch">
+        <input type="checkbox" id="nEmail">
+        <span class="slider"></span>
+      </span>
+      Email Notifications
+    </label>
+
+    <label class="switch-label">
+      <span class="switch">
+        <input type="checkbox" id="nSMS">
+        <span class="slider"></span>
+      </span>
+      SMS Notifications
+    </label>
+
+    <!-- Categories Button -->
+    <div id="catsDropdown" class="glass rounded w-full cursor-pointer p-2">
+      Select Categories
+    </div>
+
+  </div>
+
+</div>
+
+<!-- PREVIEW MODAL -->
+<div id="overlay"></div>
+<div id="preview" class="space-y-4">
+  <div class="glass p-4">
+    <h3 class="font-semibold mb-2">Business Info</h3>
+    <p id="pvBusiness"></p>
+    <p id="pvRole"></p>
+    <p id="pvEmail"></p>
+    <p id="pvPhone"></p>
+  </div>
+  <div class="glass p-4">
+    <h3 class="font-semibold mb-2">Preferences</h3>
+    <p id="pvPrefs"></p>
+    <p id="pvCats"></p>
+  </div>
+  <button class="btn w-full" onclick="closePreview()">Close</button>
+</div>
+
+<!-- CATEGORIES POP-UP -->
+<div id="overlayCats"></div>
+<div id="popupCats" class="space-y-4">
+  <div class="glass p-4">
+    <h3 class="font-semibold mb-2">Select Categories</h3>
+    <label><span>Coffee</span><input type="checkbox" value="Coffee"></label>
+    <label><span>Bakery</span><input type="checkbox" value="Bakery"></label>
+    <label><span>Dessert</span><input type="checkbox" value="Dessert"></label>
+    <label><span>Tea</span><input type="checkbox" value="Tea"></label>
+  </div>
+  <button class="btn w-full" id="closeCats">Done</button>
+</div>
+
+<script>
+let session=null;
+let audit=[];
+const auth=document.getElementById('auth');
+const email=document.getElementById('email');
+const role=document.getElementById('role');
+const tenant=document.getElementById('tenant');
+const badge=document.getElementById('badge');
+const business=document.getElementById('business');
+const prefs=document.getElementById('prefs');
+const logoutBtn=document.getElementById('logoutBtn');
+const preview=document.getElementById('preview');
+const overlay=document.getElementById('overlay');
+const bName=document.getElementById('bName');
+const bRole=document.getElementById('bRole');
+const bEmail=document.getElementById('bEmail');
+const bPhone=document.getElementById('bPhone');
+const nEmail=document.getElementById('nEmail');
+const nSMS=document.getElementById('nSMS');
+const pvBusiness=document.getElementById('pvBusiness');
+const pvRole=document.getElementById('pvRole');
+const pvEmail=document.getElementById('pvEmail');
+const pvPhone=document.getElementById('pvPhone');
+const pvPrefs=document.getElementById('pvPrefs');
+const pvCats=document.getElementById('pvCats');
+
+// Categories Pop-up
+const catsDropdown=document.getElementById("catsDropdown");
+const overlayCats=document.getElementById("overlayCats");
+const popupCats=document.getElementById("popupCats");
+const closeCatsBtn=document.getElementById("closeCats");
+
+function login(){
+  if(!email.value || !tenant.value){ alert("Please enter Email and Tenant ID."); return; }
+  session={ email:email.value, role:role.value, tenant:tenant.value };
+  localStorage.setItem("jwt_demo",JSON.stringify(session));
+  auth.style.display="none";
+  badge.textContent=`Tenant: ${session.tenant} | Role: ${session.role}`;
+  applyRBAC();
+}
+
+function applyRBAC(){
+  business.classList.remove("locked"); prefs.classList.remove("locked");
+  if(session.role==="viewer"){ business.classList.add("locked"); prefs.classList.add("locked"); }
+  if(session.role==="vendor"){ prefs.classList.add("locked"); }
+  if(session) logoutBtn.classList.remove("hidden");
+}
+
+function log(action,payload){
+  audit.push({ tenant:session.tenant, role:session.role, user:session.email, action, payload, time:new Date().toISOString() });
+  console.table(audit);
+}
+
+// ================= SAVE CHANGES WITH EMAIL & PHONE VALIDATION =================
+function save(){
+  if(!bName.value){ alert("Please fill in business name."); return; }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if(!bEmail.value || !emailPattern.test(bEmail.value)){
+    alert("Please enter a valid email address.");
+    return;
+  }
+
+  const phoneDigits = bPhone.value.replace(/\D/g,''); 
+  if(bPhone.value && !/^\d+$/.test(phoneDigits)){
+    alert("Phone number must contain only digits.");
+    return;
+  }
+
+  log("SAVE_PROFILE",{
+    business:bName.value,
+    prefs:{email:nEmail.checked,sms:nSMS.checked},
+    categories:getSelectedCats()
+  });
+
+  pvBusiness.textContent=`Business: ${bName.value}`;
+  pvRole.textContent=`Role: ${bRole.value || "N/A"}`;
+  pvEmail.textContent=`Email: ${bEmail.value}`;
+  pvPhone.textContent=`Phone: ${bPhone.value || "N/A"}`;
+  pvPrefs.textContent=`Notifications: ${[nEmail.checked&&"Email", nSMS.checked&&"SMS"].filter(Boolean).join(", ")||"None"}`;
+  pvCats.textContent=`Categories: ${getSelectedCats().join(", ") || "None"}`;
+
+  overlay.style.display="block";
+  preview.style.display="block";
+  requestAnimationFrame(()=> preview.classList.add("show"));
+}
+
+function closePreview(){
+  preview.classList.remove("show");
+  setTimeout(()=>{
+    preview.style.display="none";
+    overlay.style.display="none";
+  }, 500);
+}
+
+overlay.addEventListener("click", closePreview);
+
+document.getElementById("themeToggle").onclick=()=>{
+  document.body.classList.toggle("dark"); 
+  document.body.classList.toggle("light");
+  document.getElementById("themeToggle").innerHTML=document.body.classList.contains("dark")?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
+  localStorage.setItem("theme",document.body.className);
+}
+
+logoutBtn.onclick = ()=>{
+  localStorage.removeItem("jwt_demo"); session=null;
+  auth.style.display="flex"; badge.textContent=""; business.classList.remove("locked"); prefs.classList.remove("locked"); logoutBtn.classList.add("hidden");
+  email.value=""; role.value="admin"; tenant.value="";
+  [...popupCats.querySelectorAll("input")].forEach(i=>i.checked=false); nEmail.checked=false; nSMS.checked=false;
+  updateCatsDropdownTitle();
+}
+
+const saved=JSON.parse(localStorage.getItem("jwt_demo"));
+if(saved){ session=saved; auth.style.display="none"; badge.textContent=`Tenant: ${session.tenant} | Role: ${session.role}`; applyRBAC();}
+const savedTheme=localStorage.getItem("theme"); if(savedTheme) document.body.className=savedTheme;
+
+// ================= CATEGORIES POP-UP LOGIC =================
+catsDropdown.addEventListener("click", ()=>{
+  overlayCats.style.display="block";
+  popupCats.style.display="block";
+  popupCats.classList.add("show");
+});
+
+closeCatsBtn.addEventListener("click", ()=>{
+  overlayCats.style.display="none";
+  popupCats.classList.remove("show");
+  setTimeout(()=>popupCats.style.display="none",300);
+  updateCatsDropdownTitle();
+});
+
+overlayCats.addEventListener("click", ()=>{
+  overlayCats.style.display="none";
+  popupCats.classList.remove("show");
+  setTimeout(()=>popupCats.style.display="none",300);
+  updateCatsDropdownTitle();
+});
+
+function getSelectedCats(){
+  return [...popupCats.querySelectorAll("input:checked")].map(i=>i.value);
+}
+
+function updateCatsDropdownTitle(){
+  const selected = getSelectedCats();
+  catsDropdown.textContent = selected.length ? selected.join(", ") : "Select Categories";
+}
+
+// ================= PHONE AUTO-FORMAT =================
+bPhone.addEventListener("input", () => {
+  let digits = bPhone.value.replace(/\D/g, "");
+  if(digits.length > 0){
+    if(digits.length <= 3){
+      bPhone.value = `(${digits}`;
+    } else if(digits.length <= 6){
+      bPhone.value = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    } else {
+      bPhone.value = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+    }
+  } else {
+    bPhone.value = "";
+  }
+});
+</script>
+</body>
+</html>

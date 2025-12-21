@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Product Moderation</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+/* ================= THEME ================= */
+body.light{
+  background:linear-gradient(135deg,#FFF8E7,#D2B48C,#8B4513);
+  color:#4B2E2B;
+}
+body.dark{
+  background:linear-gradient(135deg,#0f0f0f,#2a1a12,#3b2417);
+  color:#FFF8E7;
+}
+*{transition:.35s cubic-bezier(.4,0,.2,1)}
+
+/* ================= GLASS ================= */
+.glass{
+  backdrop-filter:blur(18px);
+  background:rgba(255,255,255,.25);
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:1.25rem;
+  box-shadow:0 20px 45px rgba(0,0,0,.3);
+}
+body.dark .glass{
+  background:rgba(255,255,255,.08);
+}
+
+/* ================= ANIM ================= */
+.fade-up{
+  opacity:0;
+  transform:translateY(20px) scale(.96);
+}
+.fade-up.show{
+  opacity:1;
+  transform:none;
+}
+
+/* ================= FIELDS ================= */
+.field{
+  background:rgba(255,255,255,.65);
+  border-radius:.8rem;
+  padding:.8rem 1rem;
+  font-weight:500;
+}
+
+/* ================= IMAGE ================= */
+.preview{
+  overflow:hidden;
+  border-radius:1rem;
+}
+.preview img{
+  transition:.5s ease;
+}
+.preview:hover img{
+  transform:scale(1.15);
+}
+
+/* ================= BUTTONS ================= */
+.glass-btn{
+  position:relative;
+  overflow:hidden;
+  padding:.7rem 1.8rem;
+  border-radius:1rem;
+  font-weight:700;
+  color:#FFF8E7;
+  background:linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1));
+  border:1px solid rgba(255,255,255,0.45);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.35);
+  animation:floatGlow 4.5s ease-in-out infinite;
+  cursor:pointer;
+}
+
+.glass-btn::before{
+  content:'';
+  position:absolute;
+  inset:-40%;
+  background:linear-gradient(
+    120deg,
+    transparent 35%,
+    rgba(255,255,255,.6),
+    transparent 65%
+  );
+  transform:translateX(-120%);
+  animation:glide 3.8s cubic-bezier(.4,0,.2,1) infinite;
+  border-radius:1rem;
+}
+
+@keyframes glide{
+  0%{transform:translateX(-130%)}
+  55%{transform:translateX(130%)}
+  100%{transform:translateX(130%)}
+}
+
+@keyframes floatGlow{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-2px)}
+}
+
+.glass-btn:hover{
+  transform:translateY(-4px) scale(1.05);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.45);
+}
+
+.glass-btn:active{
+  transform:scale(.96);
+}
+
+.glass-approve{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+}
+
+.glass-reject{
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+}
+
+/* ================= MODAL ================= */
+#overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;
+  z-index:40;
+}
+#overlay.show{opacity:1;pointer-events:auto}
+
+#modal{
+  position:fixed;left:50%;bottom:-100%;
+  transform:translateX(-50%) scale(.9);
+  opacity:0;
+  z-index:50;
+  width:90%;max-width:420px;
+}
+#modal.show{
+  bottom:50%;
+  transform:translate(-50%,50%) scale(1);
+  opacity:1;
+}
+
+/* ================= TOAST ================= */
+#toast{
+  position:fixed;bottom:30px;right:30px;
+  padding:1rem 1.4rem;
+  border-radius:1rem;
+  color:white;
+  opacity:0;
+  transform:translateY(20px);
+  z-index:60;
+}
+#toast.show{
+  opacity:1;
+  transform:none;
+}
+.success{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.error{background:linear-gradient(90deg,#ef4444,#f87171)}
+</style>
+</head>
+
+<body class="light font-sans min-h-screen p-8 flex items-center justify-center">
+
+<div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+
+<!-- PRODUCT -->
+<div class="glass p-7 space-y-4 fade-up" id="card1">
+  <div class="flex justify-between items-center">
+    <h2 class="text-xl font-bold">Product Submission</h2>
+    <button onclick="toggleTheme()" class="text-xl">🌙</button>
+  </div>
+
+  <div class="preview">
+    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93"
+         class="w-full h-40 object-cover">
+  </div>
+
+  <div class="field">☕ Arabica Coffee Beans</div>
+  <div class="field">🏪 Vendor: BrewMaster</div>
+  <div class="field">📦 Category: Raw Beans</div>
+  <div class="field">💰 ₱450</div>
+
+  <div class="field text-sm text-center h-28 flex items-center justify-center">
+    Premium roasted Arabica beans sourced from local farms.
+  </div>
+</div>
+
+<!-- MODERATION -->
+<div class="glass p-7 space-y-6 fade-up" id="card2">
+
+  <h2 class="text-xl font-bold border-b border-white/40 pb-3">
+    Moderation Actions
+  </h2>
+
+  <div class="flex gap-4">
+    <button class="glass-btn glass-approve" onclick="confirmAction('approve')">
+      <i class="fa fa-check mr-1"></i> Approve
+    </button>
+    <button class="glass-btn glass-reject" onclick="confirmAction('reject')">
+      <i class="fa fa-xmark mr-1"></i> Reject
+    </button>
+  </div>
+
+  <div>
+    <h3 class="font-semibold mb-2">📝 Admin Notes</h3>
+    <textarea rows="7" class="w-full rounded-xl p-4"
+      placeholder="Internal moderation notes..."></textarea>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div id="overlay"></div>
+<div id="modal">
+  <div class="glass p-6 text-center space-y-4">
+    <h3 class="text-lg font-bold">Confirm Action</h3>
+    <p id="modalText"></p>
+    <div class="flex gap-3 justify-center">
+      <button class="glass-btn glass-approve" onclick="doAction()">Confirm</button>
+      <button class="glass-btn glass-reject" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+let currentAction=null
+
+setTimeout(()=>{
+  card1.classList.add('show')
+  card2.classList.add('show')
+},100)
+
+function toggleTheme(){
+  document.body.classList.toggle('dark')
+  document.body.classList.toggle('light')
+}
+
+function confirmAction(action){
+  currentAction=action
+  modalText.textContent =
+    action==='approve'
+    ?'Approve this product and publish it?'
+    :'Reject this product submission?'
+  overlay.classList.add('show')
+  modal.classList.add('show')
+}
+
+function closeModal(){
+  overlay.classList.remove('show')
+  modal.classList.remove('show')
+}
+
+function doAction(){
+  closeModal()
+  showToast(
+    currentAction==='approve'?'Approved Successfully ✅':'Rejected ❌',
+    currentAction==='approve'?'success':'error'
+  )
+}
+
+function showToast(msg,type){
+  toast.textContent=msg
+  toast.className=type
+  toast.classList.add('show')
+  setTimeout(()=>toast.classList.remove('show'),2800)
+}
+
+overlay.onclick=closeModal
+</script>
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cafe Owner Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                coffee: '#6F4E37',
+                mocha: '#8B5E3C',
+                cream: '#F8F3EE',
+                caramel: '#D2B48C'
+            },
+            boxShadow: {
+                glow: '0 0 20px rgba(111,78,55,0.5)'
+            }
+        }
+    }
+}
+</script>
+
+<style>
+/* Action button gradient and hover effect */
+.gradient-btn {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    padding: 0.8rem 1.4rem;
+    font-weight: 600;
+    color: white;
+    min-width: 140px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+.gradient-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(60deg,#6F4E37,#8B5E3C,#A0522D,#6F4E37);
+    background-size: 400% 400%;
+    animation: gradientMove 6s ease infinite;
+    z-index: -1;
+}
+.gradient-btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(111,78,55,0.5);
+}
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Card hover */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+/* Button click animation */
+.btn-press {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+</style>
+</head>
+
+<body class="bg-cream font-sans">
+
+<div class="flex min-h-screen">
+
+<!-- SIDEBAR -->
+<aside class="w-64 bg-white border-r border-gray-200 shadow-xl p-5 flex flex-col space-y-3">
+    <h2 class="text-xl font-bold text-coffee mb-6">☕ Cafe Panel</h2>
+
+    <a href="#" class="flex items-center px-4 py-3 rounded-lg bg-coffee text-white font-semibold shadow-md hover:scale-102 transition">
+        Overview
+    </a>
+
+    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Browse Vendors
+    </a>
+
+    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Requests
+    </a>
+
+    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Messages
+    </a>
+
+    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Profile
+    </a>
+
+    <div class="flex-grow"></div>
+    <div class="text-xs text-gray-400 text-center">
+        Vendor Marketplace © 2025
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="flex-1 p-8 lg:p-12">
+
+<!-- HEADER -->
+<div class="flex items-center justify-between mb-10">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
+        <p class="text-sm text-gray-500">Welcome back, Cafe Owner</p>
+    </div>
+    <div class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm shadow-sm">
+        📅 Last 30 Days
+    </div>
+</div>
+
+<!-- METRICS -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-xl shadow-lg card">
+        <p class="text-sm text-gray-500">Active Requests</p>
+        <h3 class="text-3xl font-bold text-coffee mt-2 counter">12</h3>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg card">
+        <p class="text-sm text-gray-500">Approved</p>
+        <h3 class="text-3xl font-bold text-green-600 mt-2 counter">8</h3>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg card">
+        <p class="text-sm text-gray-500">Pending</p>
+        <h3 class="text-3xl font-bold text-yellow-500 mt-2 counter">4</h3>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg card">
+        <p class="text-sm text-gray-500">Vendors</p>
+        <h3 class="text-3xl font-bold text-blue-600 mt-2 counter">15</h3>
+    </div>
+</div>
+
+<!-- CONTENT GRID -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+<!-- SUGGESTED PRODUCTS -->
+<div class="bg-white p-6 rounded-xl shadow-xl card">
+    <h2 class="text-xl font-semibold text-gray-800 mb-5">
+        Suggested Products
+    </h2>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
+            <p class="font-medium text-gray-700">Arabica Beans</p>
+            <span class="text-xs text-gray-500">Vendor A</span>
+        </div>
+        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
+            <p class="font-medium text-gray-700">Robusta Blend</p>
+            <span class="text-xs text-gray-500">Vendor B</span>
+        </div>
+        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
+            <p class="font-medium text-gray-700">Cold Brew Kit</p>
+            <span class="text-xs text-gray-500">Vendor C</span>
+        </div>
+    </div>
+</div>
+
+<!-- RECENT PARTNERSHIPS -->
+<div class="bg-white p-6 rounded-xl shadow-xl card">
+    <h2 class="text-xl font-semibold text-gray-800 mb-5">
+        Recent Partnerships
+    </h2>
+
+    <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition card">
+            <div>
+                <p class="font-medium text-gray-700">Vendor A</p>
+                <span class="text-xs text-green-600 font-semibold">Approved</span>
+            </div>
+            <button class="px-4 py-1.5 text-sm font-medium text-coffee border border-coffee rounded-lg gradient-btn">
+                View
+            </button>
+        </div>
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition card">
+            <div>
+                <p class="font-medium text-gray-700">Vendor B</p>
+                <span class="text-xs text-yellow-600 font-semibold">Pending</span>
+            </div>
+            <button class="px-4 py-1.5 text-sm font-medium text-coffee border border-coffee rounded-lg gradient-btn">
+                View
+            </button>
+        </div>
+    </div>
+</div>
+
+</div>
+</main>
+</div>
+
+<script>
+// Animated counters for metrics
+document.querySelectorAll('.counter').forEach(counter => {
+    const target = +counter.innerText;
+    counter.innerText = '0';
+    let count = 0;
+    const step = target / 40;
+    function update() {
+        count += step;
+        if(count < target){
+            counter.innerText = Math.floor(count);
+            requestAnimationFrame(update);
+        } else {
+            counter.innerText = target;
+        }
+    }
+    update();
+});
+
+// Button press feedback
+document.querySelectorAll('.gradient-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        btn.classList.add('btn-press');
+        setTimeout(()=>btn.classList.remove('btn-press'),120);
+    });
+});
+</script>
+
+</body>
+</html>

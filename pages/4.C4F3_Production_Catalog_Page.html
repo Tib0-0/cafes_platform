@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Catalog – Coffee Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to top right, #6F4E37, #D2B48C);
+      font-family: 'Sans-serif';
+    }
+
+    .glass {
+      background: rgba(255, 248, 231, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 248, 231, 0.25);
+      border-radius: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 20px rgba(210, 105, 30, 0.6), 0 0 30px rgba(160, 82, 45, 0.4);
+    }
+
+    .gradient-button {
+      background: linear-gradient(60deg, #A0522D, #D2691E, #8B4513, #A0522D);
+      background-size: 400% 400%;
+      animation: gradientMove 4s linear infinite;
+      color: white;
+      font-weight: 600;
+      border-radius: 1rem;
+      padding: 0.75rem 1.5rem;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .gradient-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(210, 105, 30, 0.6), 0 0 25px rgba(160, 82, 45, 0.4);
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .star {
+      color: gold;
+      font-size: 1rem;
+      margin-right: 2px;
+      transition: text-shadow 0.3s ease;
+    }
+
+    .glass:hover .star {
+      text-shadow: 0 0 8px gold, 0 0 12px orange, 0 0 16px #D2691E;
+    }
+
+    .delivery-badge {
+      position: absolute;
+      top: 10px;
+      right: -100%;
+      background: rgba(210, 105, 30, 0.85);
+      color: white;
+      font-weight: bold;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      transition: right 0.4s ease;
+      z-index: 10;
+      font-size: 0.8rem;
+    }
+
+    .glass:hover .delivery-badge {
+      right: 10px;
+    }
+
+    .filter-section {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-section:hover {
+      color: #D2691E;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-6 text-white">
+
+  <div class="container mx-auto">
+
+    <!-- Search Bar -->
+    <div class="flex mb-8 glass p-4 rounded-xl">
+      <input type="text" id="searchInput" placeholder="Search products..." 
+             class="flex-grow p-3 text-white bg-transparent placeholder-white/70 focus:outline-none rounded-lg">
+      <button class="gradient-button ml-4" onclick="applyFilters()">Search</button>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+
+      <!-- Sidebar Filters -->
+      <aside class="lg:w-1/4 w-full glass p-6 space-y-4 sticky top-4 rounded-xl">
+        <h2 class="text-xl font-semibold mb-4 text-white">Filters</h2>
+
+        <!-- Category Filter -->
+        <div>
+          <label class="block mb-2 font-medium">Category</label>
+          <select id="categoryFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
+            <option value="">All</option>
+            <option value="Coffee Beans">Coffee Beans</option>
+            <option value="Espresso Machines">Espresso Machines</option>
+            <option value="Mugs & Cups">Mugs & Cups</option>
+          </select>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div>
+          <label class="block mb-2 font-medium">Price Range ($)</label>
+          <div class="flex gap-2">
+            <input type="number" id="minPrice" placeholder="Min" class="w-1/2 p-2 rounded-lg bg-white/20 text-white">
+            <input type="number" id="maxPrice" placeholder="Max" class="w-1/2 p-2 rounded-lg bg-white/20 text-white">
+          </div>
+        </div>
+
+        <!-- Rating Filter -->
+        <div>
+          <label class="block mb-2 font-medium">Rating</label>
+          <select id="ratingFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
+            <option value="">All</option>
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★</option>
+            <option value="3">★★★</option>
+            <option value="2">★★</option>
+            <option value="1">★</option>
+          </select>
+        </div>
+
+        <!-- Delivery Filter -->
+        <div>
+          <label class="block mb-2 font-medium">Delivery</label>
+          <select id="deliveryFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
+            <option value="">All</option>
+            <option value="Same Day">Same Day</option>
+            <option value="Next Day">Next Day</option>
+            <option value="Standard">Standard</option>
+          </select>
+        </div>
+
+        <button class="gradient-button w-full mt-4" onclick="applyFilters()">Apply Filters</button>
+      </aside>
+
+      <!-- Product Grid -->
+      <main class="lg:w-3/4 w-full">
+        <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+          <!-- Product Card Template -->
+          <div class="glass p-5 transition" data-name="Premium Coffee Beans" data-category="Coffee Beans" data-price="25" data-rating="5" data-delivery="Same Day">
+            <div class="delivery-badge">Same Day</div>
+            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
+              Product Image
+            </div>
+            <h3 class="text-white font-semibold text-lg mb-1">Premium Coffee Beans</h3>
+            <div class="flex items-center mt-2 space-x-1 star-container"></div>
+            <div class="flex items-center justify-between mt-3">
+              <span class="text-white font-bold text-lg">$25</span>
+              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Coffee Beans</span>
+            </div>
+            <button class="gradient-button mt-4 w-full">Details</button>
+          </div>
+
+          <div class="glass p-5 transition" data-name="Espresso Machine" data-category="Espresso Machines" data-price="250" data-rating="4" data-delivery="Next Day">
+            <div class="delivery-badge">Next Day</div>
+            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
+              Product Image
+            </div>
+            <h3 class="text-white font-semibold text-lg mb-1">Espresso Machine</h3>
+            <div class="flex items-center mt-2 space-x-1 star-container"></div>
+            <div class="flex items-center justify-between mt-3">
+              <span class="text-white font-bold text-lg">$250</span>
+              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Espresso Machines</span>
+            </div>
+            <button class="gradient-button mt-4 w-full">Details</button>
+          </div>
+
+          <div class="glass p-5 transition" data-name="Coffee Mug Set" data-category="Mugs & Cups" data-price="40" data-rating="4" data-delivery="Standard">
+            <div class="delivery-badge">Standard</div>
+            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
+              Product Image
+            </div>
+            <h3 class="text-white font-semibold text-lg mb-1">Coffee Mug Set</h3>
+            <div class="flex items-center mt-2 space-x-1 star-container"></div>
+            <div class="flex items-center justify-between mt-3">
+              <span class="text-white font-bold text-lg">$40</span>
+              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Mugs & Cups</span>
+            </div>
+            <button class="gradient-button mt-4 w-full">Details</button>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Generate stars dynamically with glow on hover
+    document.querySelectorAll('#productGrid > div').forEach(product => {
+      const rating = parseInt(product.dataset.rating);
+      const container = product.querySelector('.star-container');
+      for(let i=1; i<=5; i++){
+        const star = document.createElement('span');
+        star.classList.add('star');
+        star.innerHTML = i <= rating ? '★' : '☆';
+        container.appendChild(star);
+      }
+    });
+
+    function applyFilters() {
+      const searchValue = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
+      const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
+      const rating = document.getElementById('ratingFilter').value;
+      const delivery = document.getElementById('deliveryFilter').value;
+
+      const products = document.querySelectorAll('#productGrid > div');
+
+      products.forEach(product => {
+        const name = product.dataset.name.toLowerCase();
+        const productCategory = product.dataset.category;
+        const price = parseFloat(product.dataset.price);
+        const productRating = product.dataset.rating;
+        const productDelivery = product.dataset.delivery;
+
+        let show = true;
+
+        if(searchValue && !name.includes(searchValue)) show = false;
+        if(category && category !== productCategory) show = false;
+        if(price < minPrice || price > maxPrice) show = false;
+        if(rating && rating !== productRating) show = false;
+        if(delivery && delivery !== productDelivery) show = false;
+
+        product.style.display = show ? 'block' : 'none';
+      });
+    }
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+  </script>
+
+</body>
+</html>

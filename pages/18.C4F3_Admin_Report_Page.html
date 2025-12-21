@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Coffee-Themed Reports Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+:root {
+    --bg-light: #f5f0ea;
+    --bg-dark: #1f2937;
+    --text-light: #111827;
+    --text-dark: #f3f4f6;
+    --glass-bg-light: rgba(255,255,255,0.75);
+    --glass-bg-dark: rgba(31,41,55,0.75);
+    --stat-gradient-light: linear-gradient(135deg, #fcd34d, #fbbf24);
+    --stat-gradient-dark: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+/* ================= BODY & SWIRLING COFFEE BACKGROUND ================= */
+body {
+    font-family: 'Inter', sans-serif;
+    transition: all 0.7s ease;
+    overflow-x: hidden;
+    position: relative;
+    background: linear-gradient(135deg, #f7f3ef, #e6ded3, #f0e0d6, #f7f3ef);
+    background-size: 800% 800%;
+    animation: coffeeSwirl 25s ease infinite;
+    color: var(--text-light);
+}
+
+body.dark {
+    background: linear-gradient(135deg, #1f2937, #374151, #1e293b, #111827);
+    color: var(--text-dark);
+}
+
+@keyframes coffeeSwirl {
+    0% { background-position:0% 50%; }
+    50% { background-position:100% 50%; }
+    100% { background-position:0% 50%; }
+}
+
+/* ================= STEAM ================= */
+.steam {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    opacity: 0.2;
+    background: radial-gradient(closest-side, rgba(255,255,255,0.4), transparent);
+    border-radius: 50%;
+    animation: steamMove 8s linear infinite;
+    transition: all 0.3s ease;
+    z-index: 0;
+}
+.steam:nth-child(2) { left: 40%; width: 150px; height: 150px; animation-duration: 10s; animation-delay: 2s; }
+.steam:nth-child(3) { left: 60%; width: 180px; height: 180px; animation-duration: 12s; animation-delay: 4s; }
+
+@keyframes steamMove {
+    0% {transform: translateX(-50%) translateY(100%) rotate(0deg); opacity:0;}
+    20% {opacity:0.15;}
+    50% {transform: translateX(-50%) translateY(-50%) rotate(10deg) scale(1.2); opacity:0.1;}
+    80% {opacity:0.05;}
+    100% {transform: translateX(-50%) translateY(-150%) rotate(20deg) scale(1.4); opacity:0;}
+}
+
+/* ================= FLOATING COFFEE BEANS ================= */
+.bean {
+    position: absolute;
+    width: 20px;
+    height: 12px;
+    background: #4b2e1e;
+    border-radius: 50% / 50%;
+    transform-origin: center;
+    animation: floatBean linear infinite;
+    opacity: 0.7;
+    z-index: 0;
+}
+
+@keyframes floatBean {
+    0% {transform: translateY(100%) rotate(0deg);}
+    50% {transform: translateY(50%) rotate(180deg);}
+    100% {transform: translateY(-150%) rotate(360deg);}
+}
+
+/* ================= GLASSMORPHIC CARDS ================= */
+.glass-card {
+    background: var(--glass-bg-light);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.4);
+    transition: all 0.7s ease;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+}
+
+body.dark .glass-card {
+    background: var(--glass-bg-dark);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0), rgba(255,255,255,0.2));
+    transform: translateX(-100%) skewX(-20deg);
+    animation: slideGlide 4s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes slideGlide {
+    0% { transform: translateX(-100%) skewX(-20deg); }
+    100% { transform: translateX(200%) skewX(-20deg); }
+}
+
+.glass-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+
+/* ================= HEADER TEXT & ICON ================= */
+.header-title {
+    color: var(--text-light);
+    transition: color 0.5s ease;
+}
+
+body.dark .header-title {
+    color: var(--text-dark);
+}
+
+/* ================= STATS, CHARTS, NOTES ================= */
+.stat-card, .chart-card, .notes-card { transition: all 0.5s ease; position: relative; overflow: hidden; }
+.stat-card { background: var(--stat-gradient-light); color:#fff; border-radius:1rem; display:flex; flex-direction:column; justify-content:center; align-items:center; font-weight:600; cursor:default; }
+body.dark .stat-card { background: var(--stat-gradient-dark); }
+.stat-card::after, .chart-card::after, .notes-card::after { content: ''; position:absolute; inset:0; background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0), rgba(255,255,255,0.2)); transform: translateX(-100%) skewX(-20deg); animation: slideGlide 3s linear infinite; pointer-events:none; border-radius: inherit; }
+
+.chart-card { background: rgba(255,255,255,0.8); backdrop-filter:blur(10px); border-radius:1rem; border:1px solid rgba(0,0,0,0.05); display:flex; justify-content:center; align-items:center; padding:1rem; }
+body.dark .chart-card { background: rgba(31,41,55,0.75); border:1px solid rgba(255,255,255,0.1); }
+
+.notes-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-radius:1rem; border:1px dashed rgba(0,0,0,0.1); padding:1.5rem; color:#4b4b4b; font-weight:500; }
+body.dark .notes-card { background: rgba(31,41,55,0.75); color:#f3f4f6; border:1px dashed rgba(255,255,255,0.1); }
+
+/* ================= PREMIUM HOVER EFFECTS ================= */
+.stat-card:hover, .chart-card:hover, .notes-card:hover {
+    transform: translateY(-7px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(251,191,36,0.35);
+}
+body.dark .stat-card:hover, body.dark .chart-card:hover, body.dark .notes-card:hover {
+    box-shadow: 0 20px 40px rgba(251,191,36,0.4);
+}
+.stat-card::before, .chart-card::before, .notes-card::before {
+    content: '';
+    position: absolute;
+    inset:0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0), rgba(255,255,255,0.3));
+    transform: translateX(-150%) skewX(-25deg);
+    pointer-events: none;
+    opacity:0;
+    transition: opacity 0.5s ease, transform 0.7s ease;
+    border-radius: inherit;
+}
+.stat-card:hover::before, .chart-card:hover::before, .notes-card:hover::before {
+    transform: translateX(200%) skewX(-25deg);
+    opacity:1;
+}
+
+/* ================= DATE RANGE ================= */
+.date-range { background: rgba(255,255,255,0.8); border-radius:0.75rem; padding:0.5rem 1rem; font-size:0.9rem; font-weight:500; color:#555; border:1px dashed rgba(0,0,0,0.1); transition: background 0.5s ease, color 0.5s ease; }
+body.dark .date-range { background: rgba(55,65,81,0.75); color:#f3f4f6; border:1px dashed rgba(255,255,255,0.2); }
+
+/* ================= PREMIUM DARK/LIGHT TOGGLE ================= */
+#toggleMode { position:fixed; top:1rem; right:1rem; z-index:50; width:75px; height:36px; background: rgba(255,255,255,0.75); backdrop-filter: blur(12px); border-radius:9999px; cursor:pointer; display:flex; align-items:center; padding:0 5px; transition: all 0.5s ease; border:1px solid rgba(0,0,0,0.1); box-shadow:0 4px 15px rgba(0,0,0,0.2);}
+#toggleMode:hover { box-shadow:0 6px 20px rgba(251,191,36,0.5); }
+body.dark #toggleMode { background: rgba(31,41,55,0.75); border:1px solid rgba(255,255,255,0.2); }
+body.dark #toggleMode:hover { box-shadow:0 6px 20px rgba(251,191,36,0.5); }
+
+#toggleKnob { width:32px; height:32px; border-radius:9999px; background:#fcd34d; color:#fff; font-size:0.8rem; box-shadow:0 4px 12px rgba(0,0,0,0.25); display:flex; align-items:center; justify-content:center; transition: all 0.5s ease; transform:translateX(0);}
+body.dark #toggleKnob { transform:translateX(39px); background:#f59e0b;}
+#toggleKnob i { pointer-events:none; transition: all 0.5s ease; }
+</style>
+</head>
+<body class="p-8">
+
+<!-- ================= STEAM EFFECT ================= -->
+<div class="steam"></div>
+<div class="steam"></div>
+<div class="steam"></div>
+
+<!-- ================= FLOATING COFFEE BEANS ================= -->
+<div id="beansContainer"></div>
+
+<!-- ================= PREMIUM DARK/LIGHT TOGGLE ================= -->
+<div id="toggleMode">
+    <div id="toggleKnob"><i class="fas fa-sun"></i></div>
+</div>
+
+<div class="container mx-auto max-w-7xl glass-card p-6 shadow-lg">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row items-center justify-between border-b border-gray-200 pb-4 mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold mb-2 md:mb-0 flex items-center gap-2 header-title">
+            <i class="fas fa-chart-line"></i> Reports Dashboard
+        </h1>
+        <div class="date-range">Date Range: Jan 1, 2025 - Dec 31, 2025</div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card h-28"><div class="counter" data-target="12450">0</div><div class="text-sm mt-1">Total Sales</div></div>
+        <div class="stat-card h-28"><div class="counter" data-target="325">0</div><div class="text-sm mt-1">New Users</div></div>
+        <div class="stat-card h-28"><div class="counter" data-target="58">0</div><div class="text-sm mt-1">Requests</div></div>
+        <div class="stat-card h-28"><div class="counter" data-target="47">0</div><div class="text-sm mt-1">Approvals</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="chart-card glass-card h-72"><canvas id="salesChart" class="w-full h-full"></canvas></div>
+        <div class="chart-card glass-card h-72"><canvas id="requestsChart" class="w-full h-full"></canvas></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2 header-title">📝 Notes</h2>
+        <div class="notes-card h-48 flex items-center justify-center text-gray-700">Admin notes and observations can be recorded here.</div>
+    </div>
+
+</div>
+
+<script>
+/* ================= FLOATING COFFEE BEANS ================= */
+const beansContainer = document.getElementById("beansContainer");
+for(let i=0;i<15;i++){
+    const bean=document.createElement("div");
+    bean.classList.add("bean");
+    bean.style.left=Math.random()*90+"vw";
+    bean.style.bottom="-20px";
+    bean.style.width=(10+Math.random()*15)+"px";
+    bean.style.height=(6+Math.random()*10)+"px";
+    bean.style.animationDuration=(5+Math.random()*7)+"s";
+    bean.style.animationDelay=Math.random()*5+"s";
+    beansContainer.appendChild(bean);
+}
+
+/* ================= PREMIUM TOGGLE ================= */
+const toggleMode = document.getElementById('toggleMode');
+const toggleKnob = document.getElementById('toggleKnob');
+toggleMode.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    toggleKnob.innerHTML = `<i class="fas fa-${isDark ? 'moon' : 'sun'}"></i>`;
+    toggleKnob.style.boxShadow = isDark 
+        ? '0 4px 20px rgba(251,191,36,0.6)' 
+        : '0 4px 20px rgba(251,191,36,0.6)';
+    setTimeout(()=>{ toggleKnob.style.boxShadow = isDark 
+        ? '0 4px 12px rgba(0,0,0,0.25)' 
+        : '0 4px 12px rgba(0,0,0,0.25)'; }, 300);
+});
+
+/* ================= ANIMATED COUNTERS ================= */
+document.querySelectorAll('.counter').forEach(counter => {
+    const updateCount = () => {
+        const target = +counter.getAttribute('data-target');
+        const count = +counter.innerText.replace(/,/g,'');
+        const increment = target / 200;
+        if(count < target){ counter.innerText = Math.ceil(count + increment); requestAnimationFrame(updateCount);}
+        else { counter.innerText = target.toLocaleString(); }
+    };
+    updateCount();
+});
+
+/* ================= CHARTS ================= */
+const salesData = { labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], datasets: [{ label: "Sales ($)", data: [1200,1900,3000,2500,3200,2800,3500,3700,4000,4200,4500,4800], fill:true, backgroundColor:"rgba(251,191,36,0.2)", borderColor:"#fbbf24", tension:0.4, pointBackgroundColor:"#f59e0b", pointRadius:5 }]};
+new Chart(document.getElementById("salesChart"), { type:'line', data:salesData, options:{ responsive:true, plugins:{legend:{display:false}, tooltip:{mode:'index',intersect:false}}, scales:{y:{beginAtZero:true}, x:{grid:{display:false}}} } });
+
+const requestsData = { labels:["Pending","Approved","Rejected"], datasets:[{ label:"Requests", data:[20,15,10], backgroundColor:["#fcd34d","#f59e0b","#f87171"], hoverOffset:10 }]};
+new Chart(document.getElementById("requestsChart"), { type:'doughnut', data:requestsData, options:{ responsive:true, plugins:{legend:{position:'bottom'}, tooltip:{mode:'index',intersect:false}} } });
+
+</script>
+</body>
+</html>

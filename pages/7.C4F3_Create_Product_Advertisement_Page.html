@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Product Advertisement</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+  background: linear-gradient(135deg, #6F4E37, #D2B48C);
+}
+.glass {
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.glow-btn {
+  position: relative;
+  overflow: hidden;
+}
+.glow-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  z-index: 0;
+}
+.glow-btn:hover::before { transform: translateX(100%); }
+.glow-btn span { position: relative; z-index: 1; }
+
+#dropZone.dragover { background-color: rgba(255,255,255,0.2); border-color: #FFF8E7; }
+.image-preview { position: relative; }
+.image-preview button {
+  position: absolute; top: 2px; right: 2px; background: rgba(255,0,0,0.7); color: white;
+  border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer;
+  font-size: 12px; display: flex; align-items: center; justify-content: center;
+}
+.char-count { font-size: 12px; color: #FFF8E7aa; text-align: right; }
+.carousel { display: flex; overflow-x: auto; gap: 8px; scroll-behavior: smooth; }
+.carousel img { min-width: 100px; height: 100px; border-radius: 0.75rem; object-fit: cover; }
+
+/* Live preview card */
+#livePreview {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 1rem;
+  padding: 1rem;
+  color: white;
+  max-width: 350px;
+  transition: all 0.3s ease;
+}
+#livePreview h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+.category-badge { display:inline-block; padding: 0.2rem 0.5rem; border-radius: 0.5rem; font-size:0.75rem; margin-bottom:0.5rem; background:#D2691E/80; }
+#liveImages { display:flex; gap:4px; overflow-x:auto; margin-bottom:0.5rem; }
+#liveImages img { height:80px; border-radius:0.5rem; min-width:80px; object-fit:cover; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-6 font-sans space-y-6">
+
+<div class="w-full max-w-6xl glass rounded-3xl shadow-2xl p-8 space-y-8">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between border-b border-white/20 pb-4">
+    <h1 class="text-2xl font-bold text-white">Create Product Advertisement</h1>
+    <button id="saveDraft" class="glow-btn px-4 py-2 text-sm text-white border border-white/40 rounded-xl hover:bg-white/10 transition"><span>Save Draft</span></button>
+  </div>
+
+  <!-- Form -->
+  <form id="adForm" class="space-y-8" enctype="multipart/form-data">
+
+    <!-- Step 1 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <input id="title" name="title" type="text" placeholder="Product Title" required class="px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none" />
+      <select id="category" name="category" class="px-4 py-3 rounded-xl bg-white/20 text-white focus:ring-2 focus:ring-[#D2691E] outline-none">
+        <option value="">Select Category</option>
+        <option value="☕ Coffee Beans">☕ Coffee Beans</option>
+        <option value="🛠 Equipment">🛠 Equipment</option>
+        <option value="🥛 Milk & Syrups">🥛 Milk & Syrups</option>
+      </select>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <input id="price" name="price" type="number" placeholder="Price" required class="px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none" />
+      <input id="unit" type="text" placeholder="Unit (kg, pack, pcs)" class="px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none" />
+    </div>
+
+    <!-- Live Price -->
+    <div class="text-white/90 text-sm">Live Price Preview: <span id="pricePreview" class="font-bold text-[#D2691E]">$0</span></div>
+
+    <!-- Description -->
+    <div>
+      <textarea id="description" name="description" rows="4" maxlength="200" placeholder="Short product description" class="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none resize-none"></textarea>
+      <div class="char-count"><span id="descCount">0</span>/200 characters</div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="space-y-2">
+      <label class="text-white font-medium">Upload Images</label>
+      <div id="dropZone" class="h-48 border-2 border-dashed border-white/40 rounded-2xl flex flex-col items-center justify-center text-white/70 cursor-pointer">
+        Drag & drop images or click to upload
+        <input type="file" id="images" name="image" multiple hidden />
+      </div>
+      <div id="preview" class="carousel"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-end space-x-4">
+      <button type="button" id="previewBtn" class="glow-btn px-6 py-3 rounded-xl text-white bg-white/20 hover:bg-white/30 transition"><span>Preview</span></button>
+      <button type="submit" class="glow-btn px-8 py-3 rounded-xl text-white bg-[#D2691E] hover:bg-[#b85a1a] transition font-semibold"><span>Publish</span></button>
+    </div>
+
+  </form>
+</div>
+
+<!-- Live Preview Card -->
+<div id="livePreview" class="glass hidden flex-col space-y-2">
+  <div class="category-badge" id="liveCategory">Category</div>
+  <h3 id="liveTitle">Product Title</h3>
+  <div id="liveImages"></div>
+  <p id="livePrice" class="font-bold text-[#D2691E]">$0</p>
+  <p id="liveDesc" class="text-white/80">Product description...</p>
+</div>
+
+<!-- Preview Modal -->
+<div id="modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="glass rounded-3xl p-6 w-11/12 max-w-lg text-white space-y-4">
+    <h2 class="text-xl font-bold">Preview Advertisement</h2>
+    <p><strong>Title:</strong> <span id="mTitle"></span></p>
+    <p><strong>Category:</strong> <span id="mCategory"></span></p>
+    <p><strong>Price:</strong> <span id="mPrice" class="text-[#D2691E]"></span></p>
+    <p class="text-white/80" id="mDesc"></p>
+    <div id="mImages" class="flex gap-2 overflow-x-auto"></div>
+    <button id="closeModal" class="mt-4 px-4 py-2 bg-white/20 rounded-xl hover:bg-white/30">Close</button>
+  </div>
+</div>
+
+<script>
+const title = document.getElementById('title');
+const category = document.getElementById('category');
+const priceInput = document.getElementById('price');
+const pricePreview = document.getElementById('pricePreview');
+const description = document.getElementById('description');
+const descCount = document.getElementById('descCount');
+const dropZone = document.getElementById('dropZone');
+const images = document.getElementById('images');
+const preview = document.getElementById('preview');
+const livePreview = document.getElementById('livePreview');
+const liveTitle = document.getElementById('liveTitle');
+const liveCategory = document.getElementById('liveCategory');
+const livePrice = document.getElementById('livePrice');
+const liveDesc = document.getElementById('liveDesc');
+const liveImages = document.getElementById('liveImages');
+
+let uploadedImages = [];
+
+priceInput.addEventListener('input', () => {
+  pricePreview.textContent = `$${priceInput.value || 0}`;
+  livePrice.textContent = `$${priceInput.value || 0}`;
+  livePreview.classList.remove('hidden');
+});
+description.addEventListener('input', () => {
+  descCount.textContent = description.value.length;
+  liveDesc.textContent = description.value || 'Product description...';
+  livePreview.classList.remove('hidden');
+});
+title.addEventListener('input', () => { liveTitle.textContent = title.value || 'Product Title'; livePreview.classList.remove('hidden'); });
+category.addEventListener('change', () => { liveCategory.textContent = category.value || 'Category'; livePreview.classList.remove('hidden'); });
+
+dropZone.addEventListener('click', () => images.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+images.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  [...files].forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages.push(e.target.result);
+      renderImages();
+      livePreview.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImages() {
+  preview.innerHTML = '';
+  liveImages.innerHTML = '';
+  uploadedImages.forEach((src, i) => {
+    // Form preview
+    const container = document.createElement('div');
+    container.className = 'image-preview';
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'rounded-xl h-24 w-24 object-cover';
+    const btn = document.createElement('button');
+    btn.textContent = '×';
+    btn.onclick = () => { uploadedImages.splice(i,1); renderImages(); };
+    container.appendChild(img);
+    container.appendChild(btn);
+    preview.appendChild(container);
+
+    // Live preview card
+    const liveImg = document.createElement('img');
+    liveImg.src = src;
+    liveImages.appendChild(liveImg);
+  });
+}
+
+// Modal Preview
+document.getElementById('previewBtn').onclick = () => {
+  const modal = document.getElementById('modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.getElementById('mTitle').textContent = title.value;
+  document.getElementById('mCategory').textContent = category.value;
+  document.getElementById('mPrice').textContent = `$${priceInput.value}`;
+  document.getElementById('mDesc').textContent = description.value;
+  const mImages = document.getElementById('mImages');
+  mImages.innerHTML = '';
+  uploadedImages.forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'h-24 w-24 rounded-xl object-cover';
+    mImages.appendChild(img);
+  });
+};
+
+document.getElementById('closeModal').onclick = () => document.getElementById('modal').classList.add('hidden');
+document.getElementById('saveDraft').onclick = () => alert('Draft saved locally (demo)');
+
+document.getElementById('adForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData();
+  formData.append('title', title.value);
+  formData.append('category', category.value);
+  formData.append('price', priceInput.value);
+  formData.append('description', description.value);
+
+  if (images.files[0]) {
+    formData.append('image', images.files[0]);
+  }
+
+  const res = await fetch('../backend/C4F3_create_product_ad.php', {
+    method: 'POST',
+    body: formData
+  });
+
+  const text = await res.text();
+
+  if (text === 'success') {
+    alert('Product submitted for approval!');
+    window.location.reload();
+  } else {
+    alert(text);
+  }
+});
+
+</script>
+
+</body>
+</html>

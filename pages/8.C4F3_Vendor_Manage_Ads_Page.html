@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Ads Dashboard with Carousel & Archive</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { background: linear-gradient(135deg,#6F4E37,#D2B48C); font-family:sans-serif; }
+.badge { @apply px-3 py-1 rounded-full text-xs font-semibold inline-block cursor-pointer; transition:0.3s; }
+.badge-pending { background: linear-gradient(135deg,#FFD580,#FFB347); color:#763C00; }
+.badge-approved { background: linear-gradient(135deg,#85FFBD,#FFFB7D); color:#215100; }
+.badge-rejected { background: linear-gradient(135deg,#FF7E5F,#FD3A69); color:#640000; }
+.badge-archived { background: linear-gradient(135deg,#C0C0C0,#A9A9A9); color:#333; }
+td[contenteditable]:focus { outline: 2px solid #D2691E; background-color: rgba(255,248,231,0.2); }
+.view-high { animation: glow 1.5s infinite alternate; }
+@keyframes glow { 0% { background: rgba(255,200,0,0.2); } 100% { background: rgba(255,200,0,0.6); } }
+.toast { position: fixed; bottom:2rem; right:2rem; background:#D2691E; color:#fff; padding:0.75rem 1.5rem; border-radius:0.5rem; opacity:0; transform:translateY(20px); transition:0.4s; z-index:1000; font-weight:600; }
+.carousel-container { display:flex; overflow-x:auto; gap:12px; scroll-behavior:smooth; padding-bottom:8px; margin-bottom:16px; }
+.carousel-item { min-width:200px; background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); border-radius:1rem; padding:1rem; flex-shrink:0; color:white; position:relative; transition:transform 0.3s; }
+.carousel-item:hover { transform:scale(1.05); }
+.carousel-item img { width:100%; height:100px; object-fit:cover; border-radius:0.75rem; margin-bottom:0.5rem; }
+.carousel-item h3 { font-size:1rem; font-weight:700; margin-bottom:0.25rem; }
+.carousel-item .views { font-size:0.875rem; font-weight:600; color:#FFD580; }
+</style>
+</head>
+<body class="p-6 min-h-screen">
+
+<div class="container mx-auto max-w-7xl space-y-6">
+
+<!-- Top Ads Carousel -->
+<div class="carousel-container" id="topCarousel"></div>
+
+<div class="bg-white p-6 rounded-2xl shadow-2xl space-y-6">
+
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+
+<div class="flex-1">
+<h1 class="text-2xl font-bold text-gray-800 mb-4">My Advertisements</h1>
+<div class="overflow-x-auto mb-4">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-4 py-2"><input type="checkbox" id="selectAll"/></th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" id="sortViews">Views 🔽</th>
+<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+<th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200" id="adTable"></tbody>
+</table>
+</div>
+<div class="flex justify-center mt-4 pagination" id="pagination"></div>
+</div>
+
+<div class="w-full md:w-96 bg-gray-50 p-4 rounded-xl shadow-inner flex flex-col gap-6">
+<h2 class="text-lg font-bold text-gray-800">Analytics</h2>
+<canvas id="viewsChart" class="bg-white rounded-lg p-2"></canvas>
+<canvas id="statusChart" class="bg-white rounded-lg p-2"></canvas>
+</div>
+</div>
+
+<div class="flex flex-wrap gap-2 items-center mt-4">
+<input type="text" id="searchInput" placeholder="Search by title..." class="px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-[#D2691E] outline-none"/>
+<button class="status-btn badge badge-pending" data-status="Pending">Pending</button>
+<button class="status-btn badge badge-approved" data-status="Approved">Approved</button>
+<button class="status-btn badge badge-rejected" data-status="Rejected">Rejected</button>
+<button class="status-btn badge badge-archived" data-status="Archived">Archived</button>
+<button class="status-btn badge bg-gray-300 text-gray-700" data-status="All">All</button>
+<button id="bulkApprove" class="badge badge-approved">Bulk Approve</button>
+<button id="bulkReject" class="badge badge-rejected">Bulk Reject</button>
+<button id="bulkDelete" class="badge badge-pending">Bulk Delete</button>
+<button id="exportCSV" class="px-4 py-2 bg-[#D2691E] text-white rounded-md hover:bg-[#b85a1a] transition">Export CSV</button>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let ads = [
+{title:'Arabica Beans 1kg', status:'Pending', views:234, created:'2025-01-08', image:'https://source.unsplash.com/200x100/?coffee'},
+{title:'Oat Milk', status:'Approved', views:541, created:'2025-01-02', image:'https://source.unsplash.com/200x100/?milk'},
+{title:'Paper Cups', status:'Rejected', views:112, created:'2024-12-28', image:'https://source.unsplash.com/200x100/?cup'},
+{title:'Espresso Machine', status:'Approved', views:320, created:'2025-01-05', image:'https://source.unsplash.com/200x100/?espresso'},
+{title:'Latte Cups', status:'Pending', views:145, created:'2025-01-10', image:'https://source.unsplash.com/200x100/?latte'},
+{title:'Milk Frother', status:'Approved', views:88, created:'2025-01-03', image:'https://source.unsplash.com/200x100/?frother'},
+{title:'Sugar Packets', status:'Pending', views:78, created:'2025-01-09', image:'https://source.unsplash.com/200x100/?sugar'},
+{title:'Cocoa Powder', status:'Rejected', views:92, created:'2024-12-30', image:'https://source.unsplash.com/200x100/?cocoa'},
+{title:'Vanilla Syrup', status:'Approved', views:410, created:'2025-01-06', image:'https://source.unsplash.com/200x100/?vanilla'},
+];
+
+let currentPage = 1;
+const rowsPerPage = 5;
+let filteredAds = [...ads];
+let selectedRows = new Set();
+let sortAsc = true;
+
+function showToast(msg) {
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.style.opacity='1';
+setTimeout(()=> t.style.opacity='0', 2000);
+}
+
+function renderCarousel(){
+const carousel = document.getElementById('topCarousel');
+carousel.innerHTML='';
+const topAds = ads.filter(a=> a.status!=='Archived').slice().sort((a,b)=>b.views-a.views).slice(0,5);
+topAds.forEach(ad=>{
+const item = document.createElement('div');
+item.className='carousel-item';
+item.innerHTML=`<img src="${ad.image}" /><h3>${ad.title}</h3><p class="views">${ad.views} views</p>`;
+carousel.appendChild(item);
+});
+}
+
+function renderTable(){
+const tableBody = document.getElementById('adTable');
+tableBody.innerHTML='';
+const start=(currentPage-1)*rowsPerPage;
+const end=start+rowsPerPage;
+const pageAds=filteredAds.slice(start,end);
+pageAds.forEach((ad,i)=>{
+const tr=document.createElement('tr');
+tr.dataset.index=i+start;
+const viewClass = ad.views>400?'view-high':'';
+tr.innerHTML=`
+<td class="px-4 py-2"><input type="checkbox" class="rowCheck"/></td>
+<td class="px-6 py-4 text-sm font-medium text-gray-900 ${viewClass}" contenteditable="true">${ad.title}</td>
+<td class="px-6 py-4 text-sm badge ${
+ad.status==='Pending'?'badge-pending':ad.status==='Approved'?'badge-approved':
+ad.status==='Rejected'?'badge-rejected':'badge-archived'
+}">${ad.status}</td>
+<td class="px-6 py-4 text-sm text-gray-700 ${viewClass}" contenteditable="true">${ad.views}</td>
+<td class="px-6 py-4 text-sm text-gray-700">${ad.created}</td>
+<td class="px-6 py-4 text-center text-sm">
+<div class="flex justify-center gap-2">
+<button class="px-3 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 editBtn">Edit</button>
+<button class="px-3 py-1 text-xs font-medium text-gray-600 border border-gray-600 rounded-md hover:bg-gray-100 archiveBtn">${ad.status==='Archived'?'Restore':'Archive'}</button>
+<button class="px-3 py-1 text-xs font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50 deleteBtn">Delete</button>
+</div>
+</td>
+`;
+tr.querySelector('.rowCheck').addEventListener('change',()=> tr.querySelector('.rowCheck').checked?selectedRows.add(tr.dataset.index):selectedRows.delete(tr.dataset.index));
+
+// Edit inline
+tr.querySelector('.editBtn').addEventListener('click',()=>{
+const titleCell = tr.children[1];
+const viewsCell = tr.children[3];
+titleCell.contentEditable = !titleCell.contentEditable;
+viewsCell.contentEditable = !viewsCell.contentEditable;
+titleCell.focus();
+showToast('Click on the fields to edit. Press Enter to save.');
+});
+
+// Archive / Restore
+tr.querySelector('.archiveBtn').addEventListener('click',()=>{
+if(ad.status==='Archived') ad.status='Pending'; else ad.status='Archived';
+renderTable(); updateCharts(); renderCarousel();
+showToast(ad.status==='Archived'?'Ad Archived!':'Ad Restored!');
+});
+
+// Delete
+tr.querySelector('.deleteBtn').addEventListener('click',()=>{
+filteredAds.splice(i+start,1);
+ads=ads.filter(a=>filteredAds.includes(a));
+selectedRows.clear(); renderTable(); updateCharts(); showToast('Ad Deleted!'); renderCarousel();
+});
+
+tableBody.appendChild(tr);
+});
+renderPagination(); updateCharts(); renderCarousel();
+}
+
+function renderPagination(){
+const pagination=document.getElementById('pagination');
+pagination.innerHTML='';
+const totalPages=Math.ceil(filteredAds.length/rowsPerPage);
+for(let i=1;i<=totalPages;i++){
+const btn=document.createElement('button');
+btn.textContent=i;
+btn.className=i===currentPage?'bg-[#D2691E] text-white px-3 py-1 rounded-md':'px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200';
+btn.onclick=()=>{currentPage=i; renderTable();};
+pagination.appendChild(btn);
+}
+}
+
+// Filters, search, bulk actions & export
+document.querySelectorAll('.status-btn').forEach(btn=>{
+btn.addEventListener('click',()=>{
+const status=btn.dataset.status;
+filteredAds=status==='All'? [...ads]: ads.filter(a=>a.status===status);
+currentPage=1; selectedRows.clear(); renderTable();
+});
+});
+
+document.getElementById('searchInput').addEventListener('input', e=>{
+const val=e.target.value.toLowerCase();
+filteredAds=ads.filter(a=>a.title.toLowerCase().includes(val));
+currentPage=1; selectedRows.clear(); renderTable();
+});
+
+document.getElementById('sortViews').addEventListener('click',()=>{
+filteredAds.sort((a,b)=> sortAsc? a.views-b.views : b.views-a.views);
+sortAsc = !sortAsc; renderTable();
+});
+
+document.getElementById('bulkDelete').addEventListener('click',()=>{
+if(selectedRows.size===0) return showToast('No rows selected!');
+const indexes=Array.from(selectedRows).map(Number).sort((a,b)=>b-a);
+indexes.forEach(i=> filteredAds.splice(i,1));
+ads=ads.filter(a=> filteredAds.includes(a));
+selectedRows.clear(); renderTable(); showToast('Bulk Delete Completed!'); renderCarousel();
+});
+
+document.getElementById('bulkApprove').addEventListener('click',()=>{
+if(selectedRows.size===0) return showToast('No rows selected!');
+selectedRows.forEach(i=> filteredAds[i].status='Approved'); renderTable(); showToast('Bulk Approve Completed!'); renderCarousel();
+});
+
+document.getElementById('bulkReject').addEventListener('click',()=>{
+if(selectedRows.size===0) return showToast('No rows selected!');
+selectedRows.forEach(i=> filteredAds[i].status='Rejected'); renderTable(); showToast('Bulk Reject Completed!'); renderCarousel();
+});
+
+document.getElementById('exportCSV').addEventListener('click',()=>{
+let csv='Title,Status,Views,Created\n';
+filteredAds.forEach(a=> csv+=`${a.title},${a.status},${a.views},${a.created}\n`);
+const blob=new Blob([csv], {type:'text/csv'});
+const link=document.createElement('a');
+link.href=URL.createObjectURL(blob); link.download='ads.csv'; link.click();
+});
+
+document.getElementById('selectAll').addEventListener('change', e=>{
+const checkboxes=document.querySelectorAll('.rowCheck');
+selectedRows.clear();
+checkboxes.forEach((cb,i)=> { cb.checked=e.target.checked; if(e.target.checked) selectedRows.add(i+(currentPage-1)*rowsPerPage); });
+});
+
+// Charts
+let viewsChart, statusChart;
+function updateCharts(){
+const ctxViews=document.getElementById('viewsChart').getContext('2d');
+const ctxStatus=document.getElementById('statusChart').getContext('2d');
+const topAds=filteredAds.filter(a=>a.status!=='Archived').slice().sort((a,b)=> b.views-a.views).slice(0,5);
+const labelsViews=topAds.map(a=>a.title);
+const dataViews=topAds.map(a=>a.views);
+const statusCounts={Pending:0, Approved:0, Rejected:0, Archived:0};
+filteredAds.forEach(a=> statusCounts[a.status]++);
+if(viewsChart) viewsChart.destroy();
+if(statusChart) statusChart.destroy();
+viewsChart = new Chart(ctxViews,{
+type:'bar', data:{ labels:labelsViews, datasets:[{label:'Views', data:dataViews, backgroundColor:'#D2691E', borderRadius:8}] },
+options:{ responsive:true, animation:{ duration:1000, easing:'easeOutBounce' }, plugins:{ legend:{ display:false } } }
+});
+statusChart = new Chart(ctxStatus,{
+type:'pie', data:{ labels:Object.keys(statusCounts), datasets:[{data:Object.values(statusCounts), backgroundColor:['#FFD580','#85FFBD','#FF7E5F','#C0C0C0'], hoverOffset:15}] },
+options:{ responsive:true, plugins:{ legend:{ position:'bottom' } }, animation:{ animateScale:true, animateRotate:true } }
+});
+}
+
+renderTable();
+</script>
+</body>
+</html>

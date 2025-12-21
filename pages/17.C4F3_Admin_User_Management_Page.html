@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee-Themed Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+/* ================= BODY & SWIRLING COFFEE BACKGROUND ================= */
+body {
+    font-family: 'Inter', sans-serif;
+    margin:0;
+    padding:0;
+    height:100vh;
+    background: linear-gradient(135deg, #f7f3ef, #e6ded3, #f0e0d6, #f7f3ef);
+    background-size: 800% 800%;
+    animation: coffeeSwirl 20s ease infinite;
+    overflow-x: hidden;
+}
+@keyframes coffeeSwirl {0% {background-position:0% 50%;}50% {background-position:100% 50%;}100% {background-position:0% 50%;}}
+
+/* ================= STEAM/Fog ================= */
+.steam {position: absolute; width: 200px; height: 200px; top: 0; left: 50%; transform: translateX(-50%); pointer-events: none; opacity: 0.2; background: radial-gradient(closest-side, rgba(255,255,255,0.4), transparent); border-radius: 50%; animation: steamMove 8s linear infinite; transition: all 0.3s ease;}
+.steam:nth-child(2) { left: 40%; width: 150px; height: 150px; animation-duration: 10s; animation-delay: 2s; }
+.steam:nth-child(3) { left: 60%; width: 180px; height: 180px; animation-duration: 12s; animation-delay: 4s; }
+@keyframes steamMove {0% {transform: translateX(-50%) translateY(100%) rotate(0deg); opacity:0;}20% {opacity:0.15;}50% {transform: translateX(-50%) translateY(-50%) rotate(10deg) scale(1.2); opacity:0.1;}80% {opacity:0.05;}100% {transform: translateX(-50%) translateY(-150%) rotate(20deg) scale(1.4); opacity:0;}}
+
+/* ================= FLOATING COFFEE BEANS ================= */
+.bean {position: absolute; width: 20px; height: 12px; background: #4b2e1e; border-radius: 50% / 50%; transform-origin: center; animation: floatBean linear infinite; opacity: 0.7;}
+@keyframes floatBean {0% {transform: translateY(100%) rotate(0deg);}50% {transform: translateY(50%) rotate(180deg);}100% {transform: translateY(-150%) rotate(360deg);}}
+
+/* ================= CONTAINER ================= */
+.container {position: relative; background: rgba(255, 248, 240, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10; transition: all 0.3s ease;}
+.container:hover .steam { opacity: 0.25; animation-duration: 5s; }
+.container:hover .bean { opacity: 1; animation-duration: 5s; }
+
+/* ================= TABLE ================= */
+tbody tr:hover { background-color: rgba(165, 111, 56, 0.1); transform: translateY(-2px); transition: all 0.3s ease-in-out; }
+.status-active { background-color: #d1fae5; color: #065f46; }
+.status-inactive { background-color: #f8d7da; color: #721c24; }
+.role-admin { background-color: #d7c0a0; color: #4b2e1e; }
+.role-vendor { background-color: #ffe5b4; color: #8b4513; }
+.role-cafe { background-color: #f5deb3; color: #5c4033; }
+.search-input:focus { border-color: #a35b00; box-shadow: 0 0 0 2px rgba(163, 91, 0, 0.2); }
+.scrollbar::-webkit-scrollbar { height: 6px; }
+.scrollbar::-webkit-scrollbar-thumb { background-color: rgba(107, 63, 0, 0.3); border-radius: 3px; }
+.fa-users { color: #8b4513; }
+
+/* ================= BUTTONS ================= */
+.btn, .btn-ios, .close-btn {
+    position: relative; padding: 0.5rem 1rem; font-weight: 500; border-radius: 0.5rem; backdrop-filter: blur(6px);
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #4b2e1e; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease;
+}
+.btn::after, .btn-ios::after, .close-btn::after {
+    content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, rgba(255,255,255,0.25), rgba(255,255,255,0), rgba(255,255,255,0.25)); transform: translateX(-100%) skewX(-20deg); animation: btnSlide 3s linear infinite; pointer-events: none;
+}
+.btn:hover, .btn-ios:hover, .close-btn:hover { background: rgba(181,101,29,0.85); color:#fff; transform: translateY(-2px);}
+.btn:hover::after, .btn-ios:hover::after, .close-btn:hover::after { animation-duration: 1.5s; }
+@keyframes btnSlide {0% { transform: translateX(-100%) skewX(-20deg);}100% { transform: translateX(200%) skewX(-20deg);}}
+
+.page-btn { backdrop-filter: blur(6px); background: rgba(255,248,240,0.3); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; padding: 0.3rem 0.7rem; margin: 0 2px; transition: all 0.3s ease; color: #4b2e1e; font-weight: 500;}
+.page-btn:hover { background: rgba(181,101,29,0.6); color: #fff; transform: translateY(-2px);}
+
+thead th { position: relative; overflow: hidden; color: #4b2e1e; background: rgba(255,248,240,0.6); border-radius: 0.5rem; padding: 0.5rem 0.7rem; font-weight: 600;}
+thead th::after { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1), rgba(255,255,255,0.2)); transform: translateX(-100%) skewX(-20deg); animation: headerSlide 3s linear infinite;}
+@keyframes headerSlide {0% { transform: translateX(-100%) skewX(-20deg);}100% { transform: translateX(200%) skewX(-20deg);}}
+
+/* ================= IOS MODAL ================= */
+.modal-bg { display: none; position: fixed; inset:0; background: rgba(0,0,0,0.25); backdrop-filter: blur(10px); justify-content: center; align-items: center; z-index:50; transition: opacity 0.35s ease; opacity:0;}
+.modal-bg.show { opacity:1;}
+.modal-ios-advanced { background: rgba(255,255,255,0.92); backdrop-filter: blur(25px); border-radius:28px; max-width:400px; width:90%; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25); transform: translateY(50px) scale(0.92); opacity:0; animation: modalSlideUpBounce 0.4s forwards; border:1px solid rgba(255,255,255,0.3); position: relative;}
+.modal-ios-header { display:flex; justify-content:space-between; align-items:center; padding:1.2rem 1.5rem; background: linear-gradient(135deg, rgba(255,235,205,0.2), rgba(255,255,255,0.1)); border-bottom:1px solid rgba(0,0,0,0.05); font-weight:600; color:#4b2e1e; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.05); backdrop-filter: blur(10px);}
+.modal-ios-body { padding:1.5rem; font-size:0.95rem; color:#5c4033; line-height:1.6;}
+.modal-ios-body p { display:flex; justify-content:space-between; margin-bottom:0.8rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(0,0,0,0.05);}
+.modal-ios-footer { display:flex; justify-content:flex-end; padding:1rem 1.5rem; border-top:1px solid rgba(0,0,0,0.05);}
+.close-btn { font-size:1.6rem; font-weight:bold; padding:0.4rem 1rem; border-radius:16px;}
+.btn-ios { padding:0.55rem 1.4rem; border-radius:16px;}
+
+/* ================= BOUNCE MODAL ANIMATION ================= */
+@keyframes modalSlideUpBounce {
+    0% { transform: translateY(60px) scale(0.95); opacity:0; }
+    60% { transform: translateY(-10px) scale(1.02); opacity:1; }
+    80% { transform: translateY(5px) scale(0.99); }
+    100% { transform: translateY(0) scale(1); }
+}
+</style>
+</head>
+<body class="p-8">
+
+<!-- STEAM EFFECT -->
+<div class="steam"></div>
+<div class="steam"></div>
+<div class="steam"></div>
+
+<!-- FLOATING COFFEE BEANS -->
+<div id="beansContainer"></div>
+
+<div class="container mx-auto max-w-7xl shadow-xl rounded-2xl border border-gray-200 p-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-users text-amber-700"></i> Users Management</h1>
+        <div class="flex space-x-2">
+            <input type="text" placeholder="Search users..." id="searchInput" class="search-input px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 text-sm">
+            <button id="searchBtn" class="btn text-sm">Search</button>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="overflow-x-auto scrollbar">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('name')">Name <i class="fas fa-sort"></i></th>
+                    <th onclick="sortTable('role')">Role <i class="fas fa-sort"></i></th>
+                    <th onclick="sortTable('status')">Status <i class="fas fa-sort"></i></th>
+                    <th onclick="sortTable('created')">Created <i class="fas fa-sort"></i></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable" class="divide-y divide-gray-200"></tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-end mt-4">
+        <button class="page-btn" onclick="prevPage()">Prev</button>
+        <span class="px-4 py-1 border-t border-b">Page <span id="currentPage">1</span></span>
+        <button class="page-btn" onclick="nextPage()">Next</button>
+    </div>
+</div>
+
+<!-- IOS-STYLE MODAL -->
+<div id="modal" class="modal-bg flex">
+    <div class="modal-ios-advanced">
+        <div class="modal-ios-header">
+            <h2>User Details</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modalContent" class="modal-ios-body"></div>
+        <div class="modal-ios-footer">
+            <button class="btn-ios" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ================= DATA & LOGIC =================
+let usersData = [
+    { name: "Vendor A", role: "Vendor", status: "Active", created: "2025-01-05" },
+    { name: "Cafe B", role: "Cafe Owner", status: "Active", created: "2025-01-03" },
+    { name: "Admin", role: "Admin", status: "Active", created: "2024-12-20" },
+    { name: "User X", role: "Vendor", status: "Inactive", created: "2025-02-15" },
+    { name: "User Y", role: "Cafe Owner", status: "Inactive", created: "2025-02-18" },
+    { name: "User Z", role: "Admin", status: "Active", created: "2025-02-20" },
+];
+
+let currentPage = 1;
+const rowsPerPage = 3;
+
+function renderTable(data) {
+    const tableBody = document.getElementById("usersTable");
+    tableBody.innerHTML = "";
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const pageData = data.slice(start, end);
+    pageData.forEach(user => {
+        const row = document.createElement("tr");
+        const roleClass = user.role.toLowerCase().includes("admin") ? "role-admin" : user.role.toLowerCase().includes("vendor") ? "role-vendor" : "role-cafe";
+        const statusClass = user.status === "Active" ? "status-active" : "status-inactive";
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm ${roleClass} font-semibold text-center">${user.role}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusClass} text-center">${user.status}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.created}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                <div class="flex justify-center space-x-2">
+                    <button class="btn" onclick="viewUser('${user.name}')"><i class="fas fa-eye mr-1"></i>View</button>
+                    <button class="btn" onclick="toggleStatus('${user.name}')"><i class="fas fa-ban mr-1"></i>${user.status === 'Active' ? 'Suspend' : 'Activate'}</button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    document.getElementById("currentPage").textContent = currentPage;
+}
+
+document.getElementById("searchBtn").addEventListener("click", () => {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = usersData.filter(u => u.name.toLowerCase().includes(query) || u.role.toLowerCase().includes(query));
+    currentPage = 1;
+    renderTable(filtered);
+});
+
+function viewUser(name) {
+    const user = usersData.find(u => u.name === name);
+    document.getElementById("modalContent").innerHTML = `
+        <p><strong>Name:</strong><span>${user.name}</span></p>
+        <p><strong>Role:</strong><span>${user.role}</span></p>
+        <p><strong>Status:</strong><span>${user.status}</span></p>
+        <p><strong>Created:</strong><span>${user.created}</span></p>
+    `;
+    const modalBg = document.getElementById("modal");
+    modalBg.style.display = "flex";
+    modalBg.classList.add("show");
+    const modal = document.querySelector(".modal-ios-advanced");
+    modal.style.transform = "translateY(0) scale(1)";
+    modal.style.opacity = "1";
+}
+
+function closeModal() {
+    const modalBg = document.getElementById("modal");
+    const modal = document.querySelector(".modal-ios-advanced");
+    modal.style.transform = "translateY(50px) scale(0.92)";
+    modal.style.opacity = "0";
+    modalBg.classList.remove("show");
+    setTimeout(()=> modalBg.style.display = "none", 300);
+}
+
+function toggleStatus(name) {
+    const user = usersData.find(u => u.name === name);
+    user.status = user.status === "Active" ? "Inactive" : "Active";
+    renderTable(usersData);
+}
+
+function nextPage() { if(currentPage * rowsPerPage < usersData.length) { currentPage++; renderTable(usersData); } }
+function prevPage() { if(currentPage > 1) { currentPage--; renderTable(usersData); } }
+
+let sortAsc = true;
+function sortTable(field) {
+    usersData.sort((a,b) => { if(a[field] < b[field]) return sortAsc ? -1 : 1; if(a[field] > b[field]) return sortAsc ? 1 : -1; return 0; });
+    sortAsc = !sortAsc;
+    renderTable(usersData);
+}
+
+renderTable(usersData);
+
+// FLOATING COFFEE BEANS
+const beansContainer = document.getElementById("beansContainer");
+const totalBeans = 10;
+for(let i=0;i<totalBeans;i++){
+    const bean = document.createElement("div");
+    bean.classList.add("bean");
+    bean.style.left = Math.random()*90 + "vw";
+    bean.style.bottom = "-20px";
+    bean.style.width = (10 + Math.random()*15) + "px";
+    bean.style.height = (6 + Math.random()*10) + "px";
+    bean.style.animationDuration = (5 + Math.random()*5) + "s";
+    bean.style.animationDelay = Math.random()*5 + "s";
+    beansContainer.appendChild(bean);
+}
+</script>
+
+</body>
+</html>
