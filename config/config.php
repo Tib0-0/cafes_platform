@@ -16,6 +16,24 @@ date_default_timezone_set('Asia/Manila');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// ===============================
+// Database Configuration (CI-safe)
+// ===============================
+
+// Environment-aware DB config
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('DB_NAME') ?: 'cafes_platform');
+define('DB_USER', getenv('DB_USER') ?: 'root');
+define('DB_PASS', getenv('DB_PASS') ?: '');
+
+// Database connection
+$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+// Connection error handling
+if ($conn->connect_error) {
+    die('Database connection failed');
+}
+
 // Site URL
 define('SITE_URL', 'http://localhost/cafes_platform');
 
