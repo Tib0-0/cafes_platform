@@ -76,10 +76,14 @@ jobs:
           EOF
 
       # 6️⃣ Import database schema (filename kept EXACT)
-      - name: Import database schema
+      - name: Import database schema (CI-safe)
         run: |
-          mysql -h 127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators = 1;"
-           mysql -h 127.0.0.1 -uci_user -pci_pass cafes_platform < 'C4F3_FULL_SCHEM(DB).sql'
+           mysql -h 127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+
+            sed 's/DEFINER[ ]*=[ ]*[^*]*\*/\*/g' "C4F3_FULL_SCHEM(DB).sql" > /tmp/schema_ci.sql
+
+            mysql -h 127.0.0.1 -uci_user -pci_pass cafes_platform < /tmp/schema_ci.sql
+
 
       # 7️⃣ PHP syntax check
       - name: PHP syntax check
