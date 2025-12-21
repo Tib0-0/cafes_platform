@@ -78,9 +78,15 @@ jobs:
       # 6️⃣ Import database schema (filename kept EXACT)
       - name: Import database schema
         run: |
-          mysql -h 127.0.0.1 -uci_user -pci_pass cafes_platform < 'C4F3_FULL_SCHEM(DB).sql'
+          mysql -h 127.0.0.1 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+           mysql -h 127.0.0.1 -uci_user -pci_pass cafes_platform < 'C4F3_FULL_SCHEM(DB).sql'
 
       # 7️⃣ PHP syntax check
       - name: PHP syntax check
         run: |
           find . -type f -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Verify tables loaded
+        run: |
+          mysql -h 127.0.0.1 -uci_user -pci_pass -e "SHOW TABLES;" cafes_platform
+
