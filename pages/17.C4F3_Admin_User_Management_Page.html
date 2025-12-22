@@ -68,7 +68,7 @@ thead th::after { content: ''; position: absolute; inset: 0; background: linear-
 
 /* ================= IOS MODAL ================= */
 .modal-bg { display: none; position: fixed; inset:0; background: rgba(0,0,0,0.25); backdrop-filter: blur(10px); justify-content: center; align-items: center; z-index:50; transition: opacity 0.35s ease; opacity:0;}
-.modal-bg.show { opacity:1;}
+.modal-bg.show { display: flex; opacity:1;}
 .modal-ios-advanced { background: rgba(255,255,255,0.92); backdrop-filter: blur(25px); border-radius:28px; max-width:400px; width:90%; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25); transform: translateY(50px) scale(0.92); opacity:0; animation: modalSlideUpBounce 0.4s forwards; border:1px solid rgba(255,255,255,0.3); position: relative;}
 .modal-ios-header { display:flex; justify-content:space-between; align-items:center; padding:1.2rem 1.5rem; background: linear-gradient(135deg, rgba(255,235,205,0.2), rgba(255,255,255,0.1)); border-bottom:1px solid rgba(0,0,0,0.05); font-weight:600; color:#4b2e1e; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.05); backdrop-filter: blur(10px);}
 .modal-ios-body { padding:1.5rem; font-size:0.95rem; color:#5c4033; line-height:1.6;}
@@ -131,7 +131,7 @@ thead th::after { content: ''; position: absolute; inset: 0; background: linear-
 </div>
 
 <!-- IOS-STYLE MODAL -->
-<div id="modal" class="modal-bg flex">
+<div id="modal" class="modal-bg">
     <div class="modal-ios-advanced">
         <div class="modal-ios-header">
             <h2>User Details</h2>
@@ -146,17 +146,28 @@ thead th::after { content: ''; position: absolute; inset: 0; background: linear-
 
 <script>
 // ================= DATA & LOGIC =================
-let usersData = [
-    { name: "Vendor A", role: "Vendor", status: "Active", created: "2025-01-05" },
-    { name: "Cafe B", role: "Cafe Owner", status: "Active", created: "2025-01-03" },
-    { name: "Admin", role: "Admin", status: "Active", created: "2024-12-20" },
-    { name: "User X", role: "Vendor", status: "Inactive", created: "2025-02-15" },
-    { name: "User Y", role: "Cafe Owner", status: "Inactive", created: "2025-02-18" },
-    { name: "User Z", role: "Admin", status: "Active", created: "2025-02-20" },
-];
-
+let usersData = [];
 let currentPage = 1;
-const rowsPerPage = 3;
+const rowsPerPage = 5;
+
+fetch("../backend/admin/get_users.php")
+  .then(res => res.json())
+  .then(data => {
+      usersData = data.map(u => ({
+          id: u.user_id,
+          name: u.username,
+          role: u.role.replace("_", " ").toUpperCase(),
+          status: u.is_active == 1 ? "Active" : "Suspended",
+          is_active: u.is_active,
+          created: u.created_at.split(" ")[0]
+      }));
+
+      renderTable(usersData);
+  })
+  .catch(err => {
+      console.error(err);
+      alert("Failed to load users");
+  });
 
 function renderTable(data) {
     const tableBody = document.getElementById("usersTable");
@@ -175,8 +186,12 @@ function renderTable(data) {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.created}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <div class="flex justify-center space-x-2">
-                    <button class="btn" onclick="viewUser('${user.name}')"><i class="fas fa-eye mr-1"></i>View</button>
-                    <button class="btn" onclick="toggleStatus('${user.name}')"><i class="fas fa-ban mr-1"></i>${user.status === 'Active' ? 'Suspend' : 'Activate'}</button>
+                    <button class="btn" onclick="viewUser(${user.id})">
+                        <i class="fas fa-eye mr-1"></i>View
+                    </button>
+                    <button class="btn" onclick="toggleStatus(${user.id})">
+                         <i class="fas fa-ban mr-1"></i>${user.status === 'Active' ? 'Suspend' : 'Activate'}
+                    </button>
                 </div>
             </td>
         `;
@@ -192,20 +207,19 @@ document.getElementById("searchBtn").addEventListener("click", () => {
     renderTable(filtered);
 });
 
-function viewUser(name) {
-    const user = usersData.find(u => u.name === name);
+function viewUser(id) {
+    const user = usersData.find(u => u.id === id);
+
     document.getElementById("modalContent").innerHTML = `
         <p><strong>Name:</strong><span>${user.name}</span></p>
         <p><strong>Role:</strong><span>${user.role}</span></p>
         <p><strong>Status:</strong><span>${user.status}</span></p>
         <p><strong>Created:</strong><span>${user.created}</span></p>
     `;
+
     const modalBg = document.getElementById("modal");
     modalBg.style.display = "flex";
     modalBg.classList.add("show");
-    const modal = document.querySelector(".modal-ios-advanced");
-    modal.style.transform = "translateY(0) scale(1)";
-    modal.style.opacity = "1";
 }
 
 function closeModal() {
@@ -217,10 +231,41 @@ function closeModal() {
     setTimeout(()=> modalBg.style.display = "none", 300);
 }
 
-function toggleStatus(name) {
-    const user = usersData.find(u => u.name === name);
-    user.status = user.status === "Active" ? "Inactive" : "Active";
-    renderTable(usersData);
+function toggleStatus(userId) {
+    fetch("../backend/admin/toggle_user_status.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (!result.success) {
+            alert(result.error || "Failed to update status");
+            return;
+        }
+
+        // Refresh users from backend
+        return fetch("../backend/admin/get_users.php");
+    })
+    .then(res => res.json())
+    .then(data => {
+        usersData = data.map(u => ({
+            id: u.user_id,
+            name: u.username,
+            role: u.role.replace("_", " ").toUpperCase(),
+            status: u.is_active == 1 ? "Active" : "Suspended",
+            is_active: u.is_active,
+            created: u.created_at.split(" ")[0]
+        }));
+
+        renderTable(usersData);
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Server error");
+    });
 }
 
 function nextPage() { if(currentPage * rowsPerPage < usersData.length) { currentPage++; renderTable(usersData); } }

@@ -176,18 +176,14 @@ body.dark .glass{
   </div>
 
   <div class="preview">
-    <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93"
-         class="w-full h-40 object-cover">
+    <img id="productImage" class="w-full h-40 object-cover">
   </div>
 
-  <div class="field">☕ Arabica Coffee Beans</div>
-  <div class="field">🏪 Vendor: BrewMaster</div>
-  <div class="field">📦 Category: Raw Beans</div>
-  <div class="field">💰 ₱450</div>
-
-  <div class="field text-sm text-center h-28 flex items-center justify-center">
-    Premium roasted Arabica beans sourced from local farms.
-  </div>
+  <div class="field" id="productName"></div>
+  <div class="field" id="vendorName"></div>
+  <div class="field" id="category"></div>
+  <div class="field" id="price"></div>
+  <div class="field text-sm text-center h-28 flex items-center justify-center" id="description"></div>
 </div>
 
 <!-- MODERATION -->
@@ -260,11 +256,25 @@ function closeModal(){
 }
 
 function doAction(){
-  closeModal()
-  showToast(
-    currentAction==='approve'?'Approved Successfully ✅':'Rejected ❌',
-    currentAction==='approve'?'success':'error'
-  )
+  fetch("../backend/admin/approve_reject_product.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ad_id: adId,
+      action: currentAction
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    closeModal();
+    showToast(data.message, data.success ? "success" : "error");
+
+    if (data.success) {
+      setTimeout(() => {
+        location.href = "14.C4F3_Admin_Dashboard_page.html";
+      }, 1200);
+    }
+  });
 }
 
 function showToast(msg,type){
@@ -275,6 +285,31 @@ function showToast(msg,type){
 }
 
 overlay.onclick=closeModal
+
+const params = new URLSearchParams(window.location.search);
+const adId = params.get("ad_id");
+
+if (!adId) {
+  alert("Invalid product");
+  location.href = "14.C4F3_Admin_Dashboard_page.html";
+}
+
+fetch(`../backend/admin/get_product.php?ad_id=${adId}`)
+  .then(res => res.json())
+  .then(p => {
+    if (!p.ad_id) {
+      alert("Product not found");
+      return;
+    }
+
+    document.getElementById("productName").innerText = "☕ " + p.product_name;
+    document.getElementById("vendorName").innerText = "🏪 Vendor: " + p.vendor_name;
+    document.getElementById("category").innerText = "📦 Category: " + p.category;
+    document.getElementById("price").innerText = "💰 ₱" + p.price;
+    document.getElementById("description").innerText = p.description;
+    document.getElementById("productImage").src = "../" + p.image_url;
+  });
+
 </script>
 
 </body>

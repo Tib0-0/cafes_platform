@@ -115,11 +115,26 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <!-- SIDEBAR -->
 <aside id="sidebar" class="glass p-4 space-y-2">
   <button class="btn w-full mb-2" onclick="toggleSidebar()">☰</button>
-  <a class="active show" onclick="nav('Overview',this)"><i class="fa fa-chart-line"></i><span>Overview</span></a>
-  <a onclick="nav('Products',this)"><i class="fa fa-box"></i><span>Products</span></a>
-  <a onclick="nav('Partnerships',this)"><i class="fa fa-handshake"></i><span>Partnerships</span></a>
-  <a onclick="nav('Users',this)"><i class="fa fa-users"></i><span>Users</span></a>
-  <a onclick="nav('Reports',this)"><i class="fa fa-file"></i><span>Reports</span></a>
+
+  <a href="14.C4F3_Admin_Dashboard_page.html" class="active">
+    <i class="fa fa-chart-line"></i><span>Overview</span>
+  </a>
+
+  <a href="15.C4F3_Admin_Product_Review_Page.html">
+    <i class="fa fa-box"></i><span>Products</span>
+  </a>
+
+  <a href="16.C4F3_Admin_Partnership_Review_Page.html">
+    <i class="fa fa-handshake"></i><span>Partnerships</span>
+  </a>
+
+  <a href="17.C4F3_Admin_User_Management_Page.html">
+    <i class="fa fa-users"></i><span>Users</span>
+  </a>
+
+  <a href="18.C4F3_Admin_Report_Page.html">
+    <i class="fa fa-file"></i><span>Reports</span>
+  </a>
 </aside>
 
 <!-- MAIN -->
@@ -210,7 +225,7 @@ fetch("../backend/admin/admin_dashboard.php")
           <small class="opacity-60">Vendor: ${p.vendor_name}</small>
         </span>
         <div class="flex gap-2">
-          <button class="btn" onclick="openModal('Review Product: ${p.product_name}')">Review</button>
+          <button class="btn" onclick="location.href='15.C4F3_Admin_Product_Review_Page.html?ad_id=${p.ad_id}'">Review</button>
           <button class="btn-outline-green px-3 rounded" onclick="approveProduct(${p.ad_id}, this.closest('.item'))">Approve</button>
           <button class="btn-outline-red px-3 rounded" onclick="rejectProduct(${p.ad_id}, this.closest('.item'))">Reject</button>
         </div>
@@ -292,7 +307,7 @@ fetch("../backend/admin/admin_dashboard.php")
         </div>
 
         <div class="flex gap-2">
-          <button class="btn" onclick="openModal('Review partnership request')">
+          <button class="btn" onclick="location.href='16.C4F3_Admin_Partnership_Review_Page.html?request_id=${r.request_id}'">
             Review
           </button>
 
@@ -342,6 +357,11 @@ function rejectRequest(id, el) {
   });
 }
 
+function reviewProduct(adId) {
+  // redirect to product review page with ad_id
+  window.location.href =
+    `15.C4F3_Admin_Product_Review_Page.html?ad_id=${adId}`;
+}
 
 /* THEME */
 themeToggle.onclick=()=>{

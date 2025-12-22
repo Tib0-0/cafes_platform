@@ -77,6 +77,7 @@ $stmt = $db->prepare("
     FROM partnership_requests pr
     JOIN users cafe ON pr.cafe_owner_id = cafe.user_id
     JOIN users vendor ON pr.vendor_id = vendor.user_id
+    WHERE pr.status = 'pending'
     ORDER BY pr.created_at DESC
     LIMIT 5
 ");

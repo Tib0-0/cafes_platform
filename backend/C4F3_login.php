@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user["is_active"]) {
+        if ((int)$user["is_active"] !== 1) {
             die("Account is disabled.");
         }
 

@@ -187,16 +187,12 @@
                 <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
                 Request Details
             </h2>
-            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-coffee"></i> Cafe</div>
-            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-store"></i> Vendor</div>
-            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-box"></i> Product</div>
-            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-handshake"></i> Proposed Terms</div>
-            <div class="p-4 h-48 rounded-md bg-white/10 flex items-center justify-center text-sm scrollbar overflow-y-auto flex-col">
-                <i class="fas fa-comment-alt mb-2"></i> Messages
-                <div class="mt-2 text-left text-xs">
-                    <p><strong>Vendor:</strong> Can we adjust delivery schedule?</p>
-                    <p><strong>Cafe:</strong> Sure, we can manage next week.</p>
-                </div>
+            <div id="cafeName" class="p-4 rounded-md bg-white/20 font-medium"></div>
+            <div id="vendorName" class="p-4 rounded-md bg-white/20 font-medium"></div>
+            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-box"></i> Product : no ad_id or product_id at database</div>
+            <div id="proposedTerms" class="p-4 rounded-md bg-white/20 font-medium"></div>
+            <div id="messageBox"
+                class="p-4 h-48 rounded-md bg-white/10 text-sm scrollbar overflow-y-auto">
             </div>
         </div>
 
@@ -318,19 +314,54 @@ function closeModal() {
     modal.style.display = 'none';
 }
 
-approveBtn.addEventListener('click', () => {
-    statusBadge.textContent = "Approved";
-    statusBadge.className = "status-badge bg-green-500 text-white";
-    addHistoryEntry("Approved", noteArea.value);
-    openModal("Approve Preview", noteArea.value, "Approved");
-});
+approveBtn.onclick = () => handleDecision("approve");
+rejectBtn.onclick = () => handleDecision("reject");
 
-rejectBtn.addEventListener('click', () => {
-    statusBadge.textContent = "Rejected";
-    statusBadge.className = "status-badge bg-red-500 text-white";
-    addHistoryEntry("Rejected", noteArea.value);
-    openModal("Reject Preview", noteArea.value, "Rejected");
-});
+function handleDecision(action) {
+  if (!requestId) {
+    alert("Invalid request ID");
+    return;
+  }
+
+  fetch("../backend/admin/approve_reject_partnership.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      request_id: requestId,
+      action: action,
+      note: noteArea.value
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert(data.message || "Action failed");
+      return;
+    }
+
+    const statusText = action === "approve" ? "Approved" : "Rejected";
+    const statusClass = action === "approve"
+      ? "status-badge bg-green-500 text-white"
+      : "status-badge bg-red-500 text-white";
+
+    statusBadge.textContent = statusText;
+    statusBadge.className = statusClass;
+
+    addHistoryEntry(statusText, noteArea.value);
+    openModal(statusText + " Preview", noteArea.value, statusText);
+
+    // ✅ AUTO-REDIRECT BACK TO DASHBOARD
+    setTimeout(() => {
+      window.location.href = "14.C4F3_Admin_Dashboard_page.html";
+    }, 800);
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Server error");
+  });
+}
+
+
 
 noteArea.addEventListener('input', () => {
     notePreview.textContent = noteArea.value || "Live preview of your notes...";
@@ -392,6 +423,40 @@ toggle.addEventListener('click', () => {
 
 // Initialize theme
 applyTheme();
+
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get("request_id");
+
+if (!requestId) {
+    alert("Invalid request");
+    location.href = "14.C4F3_Admin_Dashboard_page.html";
+}
+
+fetch(`../backend/admin/get_partnership.php?request_id=${requestId}`)
+  .then(res => res.json())
+  .then(r => {
+    if (!r.request_id) {
+        alert("Request not found");
+        return;
+    }
+
+    document.getElementById("cafeName").innerHTML =
+      `<i class="fas fa-coffee"></i> Cafe: ${r.cafe_name}`;
+
+    document.getElementById("vendorName").innerHTML =
+      `<i class="fas fa-store"></i> Vendor: ${r.vendor_name}`;
+
+    document.getElementById("proposedTerms").innerHTML =
+      `<i class="fas fa-handshake"></i> ${r.proposed_terms || "—"}`;
+
+    document.getElementById("messageBox").innerHTML =
+      `<strong>Message:</strong><br>${r.message || "—"}`;
+
+    statusBadge.textContent = r.status;
+  });
+
+  
+
 </script>
 
 </body>

@@ -18,7 +18,7 @@ ini_set('display_errors', 1);
 
 // ===============================
 // Database Configuration (CI-safe)
-// ===============================
+// ===============================~~
 
 // Environment-aware DB config
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
