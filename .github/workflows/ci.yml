@@ -13,6 +13,13 @@ jobs:
     name: Validate Database + PHP
     runs-on: ubuntu-latest
 
+    # Environment variables for PHP (used by config/database.php)
+    env:
+      DB_HOST: 127.0.0.1
+      DB_NAME: test_db
+      DB_USER: root
+      DB_PASS: root
+
     services:
       mysql:
         image: mysql:8.0
