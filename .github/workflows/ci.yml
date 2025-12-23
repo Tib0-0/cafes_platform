@@ -3,15 +3,14 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - main
       - master
   pull_request:
     branches:
-      - main
       - master
+
 jobs:
   db-validate:
-    name: Validate Database Schema
+    name: Validate Database + PHP
     runs-on: ubuntu-latest
 
     services:
@@ -27,10 +26,23 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 1️⃣ Install PHP
+      - name: Install PHP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli php-mysql
+
+      # 2️⃣ PHP Lint (syntax check)
+      - name: PHP Syntax Lint
+        run: |
+          find . -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      # 3️⃣ Wait for MySQL
       - name: Wait for MySQL to be ready
         run: |
           echo "Waiting for MySQL..."
@@ -41,6 +53,13 @@ jobs:
             fi
             sleep 2
           done
+
+      # 4️⃣ Import database schema
       - name: Import database schema
         run: |
           mysql -h 127.0.0.1 -uroot -proot test_db < "C4F3_FULL_SCHEM(DB).sql"
+
+      # 5️⃣ Run your manual test runner
+      - name: Run application tests
+        run: |
+          php tests/run_tests.php
