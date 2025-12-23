@@ -5,11 +5,20 @@
  */
 
 class Database {
-    private $host = "localhost";
-    private $db_name = "cafes_platform";
-    private $username = "root";
-    private $password = "";
+
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     private $conn;
+
+    public function __construct() {
+        // Read from environment variables (CI) or fallback to local
+        $this->host     = getenv('DB_HOST') ?: '127.0.0.1';
+        $this->db_name  = getenv('DB_NAME') ?: 'cafes_platform';
+        $this->username = getenv('DB_USER') ?: 'root';
+        $this->password = getenv('DB_PASS') ?: '';
+    }
 
     /**
      * Get database connection
@@ -18,22 +27,23 @@ class Database {
         $this->conn = null;
 
         try {
+            $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset=utf8mb4";
+
             $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->db_name,
+                $dsn,
                 $this->username,
-                $this->password
+                $this->password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]
             );
-            $this->conn->exec("set names utf8mb4");
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch(PDOException $exception) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Connection error: ' . $exception->getMessage()
-            ]);
-            exit();
+
+        } catch (PDOException $e) {
+            echo "DB CONNECTION ERROR: " . $e->getMessage() . PHP_EOL;
+            exit(1);
         }
 
         return $this->conn;
     }
 }
-?>
