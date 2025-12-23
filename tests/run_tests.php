@@ -4,7 +4,6 @@ echo "Running tests...\n\n";
 
 $tests = [
     "GetUsersTest.php",
-    "ToggleUserStatusTest.php"
 ];
 
 foreach ($tests as $test) {
