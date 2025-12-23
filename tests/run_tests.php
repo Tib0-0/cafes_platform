@@ -3,7 +3,6 @@
 echo "Running tests...\n\n";
 
 $tests = [
-   // "DatabaseTest.php",
     "GetUsersTest.php",
     "ToggleUserStatusTest.php"
 ];
