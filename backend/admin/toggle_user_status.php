@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../../config/database.php";
+require_once __DIR__ . "/toggle_user_status_logic.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     http_response_code(401);
@@ -18,12 +19,6 @@ if (!$userId) {
 
 $db = (new Database())->getConnection();
 
-/* Toggle is_active */
-$stmt = $db->prepare("
-    UPDATE users
-    SET is_active = IF(is_active = 1, 2, 1)
-    WHERE user_id = ?
-");
-$stmt->execute([$userId]);
+$success = toggleUserStatus($db, (int)$userId);
 
-echo json_encode(["success" => true]);
+echo json_encode(["success" => $success]);
