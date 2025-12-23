@@ -62,4 +62,4 @@ jobs:
       # 5️⃣ Run your manual test runner
       - name: Run application tests
         run: |
-          php run_tests.php
+          php tests/run_tests.php
