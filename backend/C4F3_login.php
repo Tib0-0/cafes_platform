@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: ../pages/6.C4F3_Vendor_Dashboard.html");
                 break;
 
-            case "cafe":
+            case "cafe_owner":
                 header("Location: ../pages/10.C4F3_Owner_Dashboard.html");
                 break;
 
@@ -55,8 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: ../pages/14.C4F3_Admin_Dashboard_Page.html");
                 break;
 
-            default:
-                header("Location: ../pages/3.C4F3_Homepage.html");
         }
         exit;
 

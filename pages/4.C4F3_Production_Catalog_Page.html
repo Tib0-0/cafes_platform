@@ -112,9 +112,6 @@
           <label class="block mb-2 font-medium">Category</label>
           <select id="categoryFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
             <option value="">All</option>
-            <option value="Coffee Beans">Coffee Beans</option>
-            <option value="Espresso Machines">Espresso Machines</option>
-            <option value="Mugs & Cups">Mugs & Cups</option>
           </select>
         </div>
 
@@ -140,16 +137,7 @@
           </select>
         </div>
 
-        <!-- Delivery Filter -->
-        <div>
-          <label class="block mb-2 font-medium">Delivery</label>
-          <select id="deliveryFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
-            <option value="">All</option>
-            <option value="Same Day">Same Day</option>
-            <option value="Next Day">Next Day</option>
-            <option value="Standard">Standard</option>
-          </select>
-        </div>
+        <!-- Delivery removed: not used -->
 
         <button class="gradient-button w-full mt-4" onclick="applyFilters()">Apply Filters</button>
       </aside>
@@ -157,84 +145,29 @@
       <!-- Product Grid -->
       <main class="lg:w-3/4 w-full">
         <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-          <!-- Product Card Template -->
-          <div class="glass p-5 transition" data-name="Premium Coffee Beans" data-category="Coffee Beans" data-price="25" data-rating="5" data-delivery="Same Day">
-            <div class="delivery-badge">Same Day</div>
-            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
-              Product Image
-            </div>
-            <h3 class="text-white font-semibold text-lg mb-1">Premium Coffee Beans</h3>
-            <div class="flex items-center mt-2 space-x-1 star-container"></div>
-            <div class="flex items-center justify-between mt-3">
-              <span class="text-white font-bold text-lg">$25</span>
-              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Coffee Beans</span>
-            </div>
-            <button class="gradient-button mt-4 w-full">Details</button>
-          </div>
-
-          <div class="glass p-5 transition" data-name="Espresso Machine" data-category="Espresso Machines" data-price="250" data-rating="4" data-delivery="Next Day">
-            <div class="delivery-badge">Next Day</div>
-            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
-              Product Image
-            </div>
-            <h3 class="text-white font-semibold text-lg mb-1">Espresso Machine</h3>
-            <div class="flex items-center mt-2 space-x-1 star-container"></div>
-            <div class="flex items-center justify-between mt-3">
-              <span class="text-white font-bold text-lg">$250</span>
-              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Espresso Machines</span>
-            </div>
-            <button class="gradient-button mt-4 w-full">Details</button>
-          </div>
-
-          <div class="glass p-5 transition" data-name="Coffee Mug Set" data-category="Mugs & Cups" data-price="40" data-rating="4" data-delivery="Standard">
-            <div class="delivery-badge">Standard</div>
-            <div class="w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70">
-              Product Image
-            </div>
-            <h3 class="text-white font-semibold text-lg mb-1">Coffee Mug Set</h3>
-            <div class="flex items-center mt-2 space-x-1 star-container"></div>
-            <div class="flex items-center justify-between mt-3">
-              <span class="text-white font-bold text-lg">$40</span>
-              <span class="px-3 py-1 bg-white/20 rounded-full text-xs text-white/80">Mugs & Cups</span>
-            </div>
-            <button class="gradient-button mt-4 w-full">Details</button>
-          </div>
-
+          <!-- product cards will be rendered here dynamically -->
         </div>
       </main>
     </div>
   </div>
 
   <script>
-    // Generate stars dynamically with glow on hover
-    document.querySelectorAll('#productGrid > div').forEach(product => {
-      const rating = parseInt(product.dataset.rating);
-      const container = product.querySelector('.star-container');
-      for(let i=1; i<=5; i++){
-        const star = document.createElement('span');
-        star.classList.add('star');
-        star.innerHTML = i <= rating ? '★' : '☆';
-        container.appendChild(star);
-      }
-    });
-
+    // Fetch and render products (all approved) or single product when ad_id provided
     function applyFilters() {
       const searchValue = document.getElementById('searchInput').value.toLowerCase();
       const category = document.getElementById('categoryFilter').value;
       const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
       const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
       const rating = document.getElementById('ratingFilter').value;
-      const delivery = document.getElementById('deliveryFilter').value;
 
-      const products = document.querySelectorAll('#productGrid > div');
+      const products = document.querySelectorAll('#productGrid > .glass');
 
       products.forEach(product => {
-        const name = product.dataset.name.toLowerCase();
-        const productCategory = product.dataset.category;
-        const price = parseFloat(product.dataset.price);
-        const productRating = product.dataset.rating;
-        const productDelivery = product.dataset.delivery;
+        const name = (product.dataset.name || '').toLowerCase();
+        const productCategory = product.dataset.category || '';
+        const price = parseFloat(product.dataset.price) || 0;
+        const productRating = product.dataset.rating || '';
+        const productDelivery = '';
 
         let show = true;
 
@@ -242,13 +175,179 @@
         if(category && category !== productCategory) show = false;
         if(price < minPrice || price > maxPrice) show = false;
         if(rating && rating !== productRating) show = false;
-        if(delivery && delivery !== productDelivery) show = false;
+        // delivery removed
 
         product.style.display = show ? 'block' : 'none';
       });
     }
 
     document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    // Populate categories dynamically from backend to avoid hardcoded mismatches
+    async function loadCategories() {
+      try {
+        const res = await fetch('../backend/get_categories.php');
+        if (!res.ok) {
+          console.debug('get_categories.php error', res.status, await res.text());
+          return;
+        }
+        const categories = await res.json();
+        const sel = document.getElementById('categoryFilter');
+        // clear existing non-all options
+        Array.from(sel.querySelectorAll('option')).forEach(opt => { if (opt.value !== '') opt.remove(); });
+        categories.forEach(cat => {
+          const o = document.createElement('option');
+          o.value = cat;
+          o.textContent = cat;
+          sel.appendChild(o);
+        });
+      } catch (e) {
+        console.debug('loadCategories exception', e);
+      }
+    }
+
+    // call once at startup
+    loadCategories();
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    async function fetchProductByAdId(adId) {
+      try {
+        const res = await fetch(`../backend/get_product.php?ad_id=${encodeURIComponent(adId)}`);
+        if (!res.ok) {
+          const text = await res.text();
+          console.debug('get_product.php error', res.status, text);
+          return null;
+        }
+        const data = await res.json();
+        console.debug('get_product.php response', data);
+        return data && Object.keys(data).length ? data : null;
+      } catch (e) {
+        console.debug('get_product.php fetch exception', e);
+        return null;
+      }
+    }
+
+    async function fetchAllProducts() {
+      try {
+        const res = await fetch(`../backend/get_products.php`);
+        if (!res.ok) {
+          const text = await res.text();
+          console.debug('get_products.php error', res.status, text);
+          return [];
+        }
+        const data = await res.json();
+        console.debug('get_products.php response', data);
+        return Array.isArray(data) ? data : [];
+      } catch (e) {
+        console.debug('get_products.php fetch exception', e);
+        return [];
+      }
+    }
+
+    function createProductCard(product) {
+      const card = document.createElement('div');
+      card.className = 'glass p-5 transition';
+      card.dataset.name = product.product_name || '';
+      card.dataset.category = product.category || '';
+      card.dataset.price = product.price || 0;
+      card.dataset.rating = product.rating || 0;
+
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70';
+      if (product.image_url) {
+        const img = document.createElement('img');
+        let src = product.image_url || '';
+        if (!/^https?:\/\//i.test(src)) {
+          if (src.startsWith('/')) {
+            // absolute from webroot - leave as-is
+          } else {
+            // relative path stored like "uploads/..." -> page is in /pages/ so prefix ../
+            src = '../' + src;
+          }
+        }
+        img.src = src;
+        img.alt = product.product_name || 'Product Image';
+        img.className = 'object-cover w-full h-full rounded-xl';
+        imgWrap.innerHTML = '';
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.textContent = 'Product Image';
+      }
+      card.appendChild(imgWrap);
+
+      const h3 = document.createElement('h3');
+      h3.className = 'text-white font-semibold text-lg mb-1';
+      h3.textContent = product.product_name || '';
+      card.appendChild(h3);
+
+      const starContainer = document.createElement('div');
+      starContainer.className = 'flex items-center mt-2 space-x-1 star-container';
+      const rating = parseInt(product.rating) || 0;
+      for (let i=1;i<=5;i++){
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.innerHTML = i <= rating ? '★' : '☆';
+        starContainer.appendChild(star);
+      }
+      card.appendChild(starContainer);
+
+      const bottom = document.createElement('div');
+      bottom.className = 'flex items-center justify-between mt-3';
+      const price = document.createElement('span');
+      price.className = 'text-white font-bold text-lg';
+      price.textContent = `$${product.price}`;
+      const cat = document.createElement('span');
+      cat.className = 'px-3 py-1 bg-white/20 rounded-full text-xs text-white/80';
+      cat.textContent = product.category || '';
+      bottom.appendChild(price);
+      bottom.appendChild(cat);
+      card.appendChild(bottom);
+
+      const btn = document.createElement('button');
+      btn.className = 'gradient-button mt-4 w-full';
+      btn.textContent = 'Details';
+      // navigate to details page with ad_id when clicked
+      btn.addEventListener('click', () => {
+        if (product.ad_id) {
+          window.location.href = `../pages/5.C4F3_Product_Details_Page.html?ad_id=${encodeURIComponent(product.ad_id)}`;
+        }
+      });
+      card.appendChild(btn);
+
+      return card;
+    }
+
+    async function loadProducts() {
+      const adId = getQueryParam('ad_id');
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+
+      if (adId) {
+        const product = await fetchProductByAdId(adId);
+        if (product) {
+          grid.appendChild(createProductCard(product));
+          return;
+        }
+        // if not found, fallthrough to load all products
+      }
+
+      const products = await fetchAllProducts();
+      if (!products.length) {
+        grid.innerHTML = '<div class="glass p-6">No approved products found.</div>';
+        return;
+      }
+
+      for (const p of products) {
+        grid.appendChild(createProductCard(p));
+      }
+    }
+
+    // initial load
+    loadProducts();
   </script>
 
 </body>
