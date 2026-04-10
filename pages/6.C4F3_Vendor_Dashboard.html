@@ -19,18 +19,33 @@
   canvas { border-radius:1rem; background: rgba(255,255,255,0.1); }
   .carousel { display:flex; overflow-x:auto; scroll-behavior: smooth; padding-bottom:10px; }
   .carousel::-webkit-scrollbar { display: none; }
+  .sidebar-toggle { display:none; }
+  @media (max-width: 768px) { 
+    .sidebar-toggle { display:block; }
+    #sidebar { position:fixed; left: -100%; top:0; height:100vh; transition: left 0.3s ease; z-index:1000; }
+    #sidebar.open { left: 0; }
+    #sidebarOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; }
+    #sidebarOverlay.open { display:block; }
+  }
 </style>
 </head>
 <body class="min-h-screen font-sans p-0">
 
 <div class="flex min-h-screen">
+  <!-- Sidebar Toggle Button (Mobile) -->
+  <button id="sidebarToggle" class="sidebar-toggle fixed top-4 left-4 z-50 bg-white/20 p-2 rounded-lg text-white text-xl">
+    ☰
+  </button>
+  <div id="sidebarOverlay"></div>
+
   <!-- Sidebar -->
-  <aside class="w-64 glass soft-shadow flex-shrink-0 border-r border-white/20 p-6 flex flex-col space-y-4">
-    <a href="#" class="block btn-glass text-center py-3 active" id="overviewBtn"><span>Overview</span></a>
-    <a href="#" class="block btn-glass text-center py-3" id="myAdsBtn"><span>My Ads</span></a>
-    <a href="#" class="block btn-glass text-center py-3" id="partnershipsBtn"><span>Partnerships</span></a>
-    <a href="#" class="block btn-glass text-center py-3" id="messagesBtn"><span>Messages</span></a>
-    <a href="#" class="block btn-glass text-center py-3" id="profileBtn"><span>Profile</span></a>
+  <aside id="sidebar" class="w-64 glass soft-shadow flex-shrink-0 border-r border-white/20 p-6 flex flex-col space-y-4">
+    <a href="6.C4F3_Vendor_Dashboard.html" class="block btn-glass text-center py-3 active" id="overviewBtn"><span>Overview</span></a>
+    <a href="8.C4F3_Vendor_Manage_Ads_Page.html" class="block btn-glass text-center py-3" id="myAdsBtn"><span>My Ads</span></a>
+    <a href="7.C4F3_Create_Product_Advertisement_Page.html" class="block btn-glass text-center py-3"><span>Create Ad</span></a>
+    <a href="9.C4F3_Vendor_Partnership_Request_Review_Page.html?filter=pending" class="block btn-glass text-center py-3" id="partnershipsBtn"><span>Partnerships</span></a>
+    <a href="12.C4F3_Messaging_Page.html" class="block btn-glass text-center py-3" id="messagesBtn"><span>Messages</span></a>
+    <a href="13.C4FE_v5.0_User_Profile_Page.html" class="block btn-glass text-center py-3" id="profileBtn"><span>Profile</span></a>
     <div class="flex-grow"></div>
   </aside>
 
@@ -38,102 +53,76 @@
   <main class="flex-1 p-6 lg:p-10 space-y-8">
     <div class="flex items-center justify-between">
       <h1 class="text-3xl font-bold text-white">Dashboard</h1>
-      <div class="flex space-x-2 items-center">
-        <input type="date" id="startDate" class="px-4 py-2 glass soft-shadow text-white/80 rounded-md">
-        <input type="date" id="endDate" class="px-4 py-2 glass soft-shadow text-white/80 rounded-md">
-        <button class="btn-glass px-4 py-2" onclick="updateCharts()"><span>Filter</span></button>
-      </div>
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div class="glass soft-shadow p-6 flex flex-col items-center justify-center font-semibold text-white text-lg hover-scale">
-        <span>Views</span>
-        <canvas id="viewsChart" class="mt-3 w-full h-24"></canvas>
+        <span>Total Ads</span>
+        <p class="text-4xl" id="statTotalAds">-</p>
       </div>
       <div class="glass soft-shadow p-6 flex flex-col items-center justify-center font-semibold text-white text-lg hover-scale">
-        <span>Clicks</span>
-        <canvas id="clicksChart" class="mt-3 w-full h-24"></canvas>
+        <span>Active Ads</span>
+        <p class="text-4xl" id="statActiveAds">-</p>
       </div>
       <div class="glass soft-shadow p-6 flex flex-col items-center justify-center font-semibold text-white text-lg hover-scale">
-        <span>Requests</span>
-        <canvas id="requestsChart" class="mt-3 w-full h-24"></canvas>
+        <span>Approved Requests</span>
+        <p class="text-4xl" id="statApprovedRequests">-</p>
       </div>
-      <div class="glass soft-shadow p-6 flex flex-col items-center justify-center font-semibold text-white text-lg hover-scale">
-        <span>Approvals</span>
-        <canvas id="approvalsChart" class="mt-3 w-full h-24"></canvas>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div class="glass soft-shadow p-6">
+        <h3 class="text-white font-bold mb-4">Partnership Requests</h3>
+        <canvas id="requestsChart" class="max-h-64"></canvas>
+      </div>
+      <div class="glass soft-shadow p-6">
+        <h3 class="text-white font-bold mb-4">Approvals</h3>
+        <canvas id="approvalsChart" class="max-h-64"></canvas>
       </div>
     </div>
 
     <!-- Recent Ads and Requests -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div class="glass soft-shadow p-6 space-y-4">
-        <h2 class="text-xl font-bold text-white">Recent Ads</h2>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg">
-            <span class="font-medium text-white">Ad A</span>
-            <span class="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Active</span>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg">
-            <span class="font-medium text-white">Ad B</span>
-            <span class="px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full">Pending</span>
-          </div>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-white">Recent Ads</h2>
+          <a href="8.C4F3_Vendor_Manage_Ads_Page.html" class="btn-glass px-3 py-1 text-sm"><span>View All</span></a>
+        </div>
+        <div id="recentAdsList" class="space-y-3">
+          <p class="text-white/60 text-center py-4">Loading...</p>
         </div>
       </div>
       <div class="glass soft-shadow p-6 space-y-4">
-        <h2 class="text-xl font-bold text-white">Recent Requests</h2>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg">
-            <span class="font-medium text-white">Cafe One</span>
-            <button class="btn-glass px-4 py-2" onclick="openModal('Cafe One')"><span>View</span></button>
-          </div>
-          <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg">
-            <span class="font-medium text-white">Cafe Two</span>
-            <button class="btn-glass px-4 py-2" onclick="openModal('Cafe Two')"><span>View</span></button>
-          </div>
+        <div>
+          <h2 class="text-xl font-bold text-white">Recent Requests</h2>
+        </div>
+        <div id="recentRequestsList" class="space-y-3">
+          <p class="text-white/60 text-center py-4">Loading...</p>
         </div>
       </div>
     </div>
 
     <!-- Related Products Carousel -->
     <div class="space-y-4">
-      <h2 class="text-2xl font-bold text-white">Related Products</h2>
+      <h2 class="text-2xl font-bold text-white">Marketplace Products</h2>
 
       <!-- Filters -->
       <div class="flex flex-wrap gap-3 mb-4">
-        <select id="categoryFilter" class="glass px-4 py-2 text-white rounded-md">
+        <select id="categoryFilter" class="glass px-4 py-2 text-white rounded-md" onchange="filterProducts()">
           <option value="">All Categories</option>
           <option value="Coffee Beans">Coffee Beans</option>
           <option value="Equipment">Equipment</option>
           <option value="Merch">Merch</option>
         </select>
-        <input type="range" min="0" max="200" step="10" id="priceFilter" class="glass w-48" onchange="filterProducts()">
-        <span class="text-white ml-2" id="priceLabel">$0 - $200</span>
+        <input type="range" min="0" max="100000" step="1000" id="priceFilter" class="glass w-48" onchange="filterProducts()">
+        <span class="text-white ml-2" id="priceLabel">₱0 - ₱100,000</span>
       </div>
 
       <!-- Carousel -->
       <div class="carousel" id="relatedCarousel">
-        <!-- Product template -->
-        <div class="glass soft-shadow p-5 rounded-2xl hover-scale min-w-[250px] m-2" data-category="Coffee Beans" data-price="50">
-          <div class="w-full h-40 mb-4 bg-white/20 rounded-xl flex items-center justify-center text-white/70">Image</div>
-          <h3 class="text-white font-semibold">Espresso Beans</h3>
-          <p class="text-[#D2691E] font-bold">$50</p>
-        </div>
-        <div class="glass soft-shadow p-5 rounded-2xl hover-scale min-w-[250px] m-2" data-category="Equipment" data-price="150">
-          <div class="w-full h-40 mb-4 bg-white/20 rounded-xl flex items-center justify-center text-white/70">Image</div>
-          <h3 class="text-white font-semibold">Coffee Grinder</h3>
-          <p class="text-[#D2691E] font-bold">$150</p>
-        </div>
-        <div class="glass soft-shadow p-5 rounded-2xl hover-scale min-w-[250px] m-2" data-category="Merch" data-price="25">
-          <div class="w-full h-40 mb-4 bg-white/20 rounded-xl flex items-center justify-center text-white/70">Image</div>
-          <h3 class="text-white font-semibold">Coffee Mug</h3>
-          <p class="text-[#D2691E] font-bold">$25</p>
-        </div>
-        <div class="glass soft-shadow p-5 rounded-2xl hover-scale min-w-[250px] m-2" data-category="Coffee Beans" data-price="70">
-          <div class="w-full h-40 mb-4 bg-white/20 rounded-xl flex items-center justify-center text-white/70">Image</div>
-          <h3 class="text-white font-semibold">Latte Blend</h3>
-          <p class="text-[#D2691E] font-bold">$70</p>
-        </div>
+        <p class="text-white/60">Loading products...</p>
       </div>
     </div>
 
@@ -153,74 +142,150 @@
 </div>
 
 <script>
-fetch('/cafes_platform/backend/vendor_dashboard.php')
+// Sidebar toggle
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+});
+
+// Load dashboard data
+fetch('../backend/vendor_dashboard.php')
   .then(res => res.json())
   .then(data => {
     console.log(data);
 
-    // stats
-    // data.stats.totalAds
-    // data.stats.activeAds
+    // Stats
+    document.getElementById('statTotalAds').textContent = data.stats.totalAds || 0;
+    document.getElementById('statActiveAds').textContent = data.stats.activeAds || 0;
+    document.getElementById('statApprovedRequests').textContent = data.stats.approvedRequests || 0;
 
-    // lists
-    // data.recentAds
-    // data.recentRequests
+    // Recent Ads
+    const recentAdsList = document.getElementById('recentAdsList');
+    if (data.recentAds.length > 0) {
+      recentAdsList.innerHTML = data.recentAds.map(ad => `
+        <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <div>
+            <span class="font-medium text-white">${ad.product_name}</span>
+            <p class="text-xs text-white/60">₱${ad.price}</p>
+          </div>
+          <span class="px-3 py-1 text-xs font-semibold rounded-full ${
+            ad.status === 'approved' ? 'text-green-700 bg-green-100' :
+            ad.status === 'pending' ? 'text-yellow-700 bg-yellow-100' :
+            'text-red-700 bg-red-100'
+          }">${ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}</span>
+        </div>
+      `).join('');
+    } else {
+      recentAdsList.innerHTML = '<p class="text-white/60 text-center py-4">No ads yet</p>';
+    }
 
-    // charts
-    // data.charts.views
+    // Recent Requests
+    const recentRequestsList = document.getElementById('recentRequestsList');
+    if (data.recentRequests.length > 0) {
+      recentRequestsList.innerHTML = data.recentRequests.map(req => `
+        <div class="flex items-center justify-between p-4 bg-white/10 rounded-lg hover:bg-white/20 transition">
+          <div>
+            <span class="font-medium text-white">${req.cafe_name}</span>
+            <p class="text-xs text-white/60">${req.product_name || 'N/A'}</p>
+          </div>
+          <a href="9.C4F3_Vendor_Partnership_Request_Review_Page.html?request_id=${req.request_id}" class="btn-glass px-4 py-2 text-sm"><span>View</span></a>
+        </div>
+      `).join('');
+    } else {
+      recentRequestsList.innerHTML = '<p class="text-white/60 text-center py-4">No recent requests</p>';
+    }
+
+    // Related Products
+    const carousel = document.getElementById('relatedCarousel');
+    if (data.relatedProducts.length > 0) {
+      carousel.innerHTML = data.relatedProducts.map(p => `
+        <div class="glass soft-shadow p-5 rounded-2xl hover-scale min-w-[250px] m-2" data-category="${p.category}" data-price="${p.price}">
+          <div class="w-full h-40 mb-4 bg-white/20 rounded-xl flex items-center justify-center overflow-hidden">
+            ${p.image_url ? `<img src="../${p.image_url}" alt="${p.product_name}" class="w-full h-full object-cover">` : '<i class="fas fa-image text-white/40 text-4xl"></i>'}
+          </div>
+          <h3 class="text-white font-semibold">${p.product_name}</h3>
+          <p class="text-[#D2691E] font-bold">₱${p.price}</p>
+          <p class="text-white/60 text-xs">${p.category}</p>
+        </div>
+      `).join('');
+    } else {
+      carousel.innerHTML = '<p class="text-white/60">No approved products available</p>';
+    }
+
+    // Charts
+    createChart(
+      document.getElementById('requestsChart'),
+      'Requests',
+      '#FF8C00',
+      data.charts.requests.labels,
+      data.charts.requests.data
+    );
+
+    createChart(
+      document.getElementById('approvalsChart'),
+      'Approvals',
+      '#ADFF2F',
+      data.charts.approvals.labels,
+      data.charts.approvals.data
+    );
+  })
+  .catch(err => {
+    console.error('Error loading dashboard:', err);
   });
-</script>
-  
-  function openModal(name){
-    document.getElementById('modalTitle').textContent = name + ' Request';
-    document.getElementById('modalContent').textContent = 'Here are the details for ' + name + '.';
-    document.getElementById('requestModal').classList.remove('hidden');
-    document.getElementById('requestModal').classList.add('flex');
-  }
-  function closeModal(){
-    document.getElementById('requestModal').classList.add('hidden');
-    document.getElementById('requestModal').classList.remove('flex');
-  }
 
-  // Charts
-  let charts = {};
-  const createChart = (ctx,label,color)=>{
-    return new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-        datasets:[{label,label,data:Array.from({length:7},()=>Math.floor(Math.random()*100)),borderColor:color,backgroundColor:color+'33',fill:true,tension:0.4}]
-      },
-      options:{
-        responsive:true,
-        plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:'white'},grid:{color:'rgba(255,255,255,0.2)'}},y:{ticks:{color:'white'},grid:{color:'rgba(255,255,255,0.2)'}}}
+function openModal(name){
+  document.getElementById('modalTitle').textContent = name + ' Request';
+  document.getElementById('modalContent').textContent = 'Here are the details for ' + name + '.';
+  document.getElementById('requestModal').classList.remove('hidden');
+  document.getElementById('requestModal').classList.add('flex');
+}
+
+function closeModal(){
+  document.getElementById('requestModal').classList.add('hidden');
+  document.getElementById('requestModal').classList.remove('flex');
+}
+
+// Charts
+const createChart = (ctx, label, color, labels, data) => {
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: label,
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '33',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.2)' } },
+        y: { ticks: { color: 'white', stepSize: 1, callback: function(value) { return Math.round(value); } }, grid: { color: 'rgba(255,255,255,0.2)' } }
       }
-    });
-  };
+    }
+  });
+};
 
-  charts.views=createChart(document.getElementById('viewsChart'),'Views','#FFD700');
-  charts.clicks=createChart(document.getElementById('clicksChart'),'Clicks','#FF8C00');
-  charts.requests=createChart(document.getElementById('requestsChart'),'Requests','#FF4500');
-  charts.approvals=createChart(document.getElementById('approvalsChart'),'Approvals','#ADFF2F');
-
-  function updateCharts(){
-    const start=document.getElementById('startDate').value;
-    const end=document.getElementById('endDate').value;
-    if(!start||!end)return alert("Select start & end dates");
-    Object.values(charts).forEach(c=>{c.data.datasets[0].data=Array.from({length:7},()=>Math.floor(Math.random()*100)); c.update();});
-  }
-
-  // Related Products Filter
-  function filterProducts(){
-    const cat=document.getElementById('categoryFilter').value;
-    const price=document.getElementById('priceFilter').value;
-    document.getElementById('priceLabel').textContent=`$0 - $${price}`;
-    document.querySelectorAll('#relatedCarousel > div').forEach(p=>{
-      const pCat=p.dataset.category, pPrice=parseInt(p.dataset.price);
-      if((!cat||cat===pCat)&&(pPrice<=price)){ p.style.display='block'; }else{ p.style.display='none'; }
-    });
-  }
+// Related Products Filter
+function filterProducts(){
+  const cat = document.getElementById('categoryFilter').value;
+  const price = document.getElementById('priceFilter').value;
+  document.getElementById('priceLabel').textContent = `₱0 - ₱${parseInt(price).toLocaleString()}`;
+  document.querySelectorAll('#relatedCarousel > div').forEach(p => {
+    const pCat = p.dataset.category, pPrice = parseInt(p.dataset.price);
+    if((!cat || cat === pCat) && (pPrice <= price)){ p.style.display = 'block'; } else { p.style.display = 'none'; }
+  });
+}
 </script>
 </body>
 </html>

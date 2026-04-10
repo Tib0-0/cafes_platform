@@ -120,11 +120,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <i class="fa fa-chart-line"></i><span>Overview</span>
   </a>
 
-  <a href="15.C4F3_Admin_Product_Review_Page.html">
+  <a href="15.C4F3_Admin_Product_Review_Page.html?filter=pending">
     <i class="fa fa-box"></i><span>Products</span>
   </a>
 
-  <a href="16.C4F3_Admin_Partnership_Review_Page.html">
+  <a href="16.C4F3_Admin_Partnership_Review_Page.html?filter=pending">
     <i class="fa fa-handshake"></i><span>Partnerships</span>
   </a>
 
@@ -153,22 +153,18 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <div id="content" class="section show space-y-6">
 
 <!-- STATS -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
-    <div id="statPending" class="text-2xl font-bold">4</div>
+    <div id="statPending" class="text-2xl font-bold">—</div>
     Pending Products
   </div>
   <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
-    <div id="statUsers" class="text-2xl font-bold">12</div>
-    New Users
+    <div id="statUsers" class="text-2xl font-bold">—</div>
+    New Users (30 days)
   </div>
   <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
-    <div id="statRequests" class="text-2xl font-bold">7</div>
+    <div id="statRequests" class="text-2xl font-bold">—</div>
     Open Requests
-  </div>
-  <div class="stat glass p-6 text-center hover:scale-105 transition-all duration-300">
-    <div id="statFlags" class="text-2xl font-bold">3</div>
-    Flags
   </div>
 </div>
 
@@ -203,6 +199,19 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script>
+
+// Load and update stats
+fetch("../backend/admin/admin_dashboard.php")
+  .then(res => res.json())
+  .then(data => {
+    // Update stats
+    if (data.stats) {
+      document.getElementById("statPending").textContent = data.stats.pendingProducts || 0;
+      document.getElementById("statUsers").textContent = data.stats.newUsers || 0;
+      document.getElementById("statRequests").textContent = data.stats.openRequests || 0;
+    }
+  })
+  .catch(err => console.error("Error loading stats:", err));
 
 fetch("../backend/admin/admin_dashboard.php")
   .then(res => res.json())

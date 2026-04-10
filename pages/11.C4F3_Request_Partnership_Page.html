@@ -204,12 +204,28 @@ previewModal.onclick = e => e.target === previewModal && previewModal.classList.
 document.getElementById("partnershipForm").onsubmit = e => {
   e.preventDefault();
 
+  // Validate that a product is selected
+  if (!product.value) {
+    alert("Please select a product");
+    return;
+  }
+
+  if (!vendor.value) {
+    alert("Please select a vendor");
+    return;
+  }
+
+  if (!message.value.trim()) {
+    alert("Please enter a message");
+    return;
+  }
+
   fetch("../backend/partnership/create_request.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      ad_id: product.value,
       vendor_id: vendor.value,
-      product_ad_id: product.value,
       message: message.value,
       terms: terms.value
     })

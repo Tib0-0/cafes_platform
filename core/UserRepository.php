@@ -71,5 +71,22 @@ class UserRepository extends BaseRepository {
         );
         return $stmt ? $stmt->rowCount() > 0 : false;
     }
+
+    /**
+     * Search users for messaging
+     * @param string $searchTerm
+     * @param int $excludeUserId
+     * @return array
+     */
+    public function searchUsers($searchTerm, $excludeUserId) {
+        $stmt = $this->executeQuery(
+            "SELECT user_id, username, email, role FROM {$this->table} 
+             WHERE user_id != ? AND is_active = 1 
+             AND (username LIKE ? OR email LIKE ?)
+             ORDER BY username ASC LIMIT 20",
+            [$excludeUserId, "%{$searchTerm}%", "%{$searchTerm}%"]
+        );
+        return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
 }
 ?>

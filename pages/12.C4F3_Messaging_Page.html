@@ -87,15 +87,24 @@
 .dark-mode .bg-gray-200 { background-color:#3a3a3a !important; color:#f3f3f3; }
 .dark-mode .border-gray-200 { border-color:#555 !important; }
 .dark-mode .focus\:ring-coffee { --tw-ring-color: #D2B48C; }
+.dark-mode .emoji-picker { background-color:#2a2a2a !important; }
 
 /* --- Emoji Picker --- */
 .emoji-picker {
-  position: absolute; bottom:60px; right:20px;
+  position: absolute; bottom: calc(100% + 10px); right: 20px;
   background:white; border-radius:1rem; padding:0.5rem;
   display:none; grid-template-columns: repeat(6, 1fr); gap:0.25rem;
-  box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:100;
+  box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:1000;
+  min-width:200px;
+  pointer-events: auto;
 }
-.emoji-picker span { cursor:pointer; font-size:1.2rem; transition: transform 0.2s; }
+.emoji-picker span {
+  cursor:pointer;
+  font-size:1.2rem;
+  transition: transform 0.2s;
+  pointer-events: auto;
+  user-select: none;
+}
 .emoji-picker span:hover { transform: scale(1.3); }
 
 #chatMessages { scroll-behavior: smooth; }
@@ -116,155 +125,384 @@
              class="w-full p-2 border border-dashed border-[#D2B48C] focus:outline-none text-sm rounded-md bg-[#FFF8E7]">
     </div>
     <div class="flex-grow overflow-y-auto space-y-2 p-4" id="chatList">
-      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg bg-[#FFF8E7] cursor-pointer chat-item" data-chat="Vendor A">
-        <span class="font-semibold text-[#4B2E2B]">Vendor A</span>
-        <span class="badge px-2 py-0.5 text-xs font-bold text-white bg-blue-500 rounded-full">2</span>
-      </div>
-      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg hover:bg-[#F0E5D8] cursor-pointer chat-item" data-chat="Cafe B">
-        <span class="font-medium text-[#4B2E2B]">Cafe B</span>
-        <span class="badge w-2 h-2 bg-red-500 rounded-full"></span>
-      </div>
-      <div class="flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg hover:bg-[#F0E5D8] cursor-pointer chat-item" data-chat="Admin">
-        <span class="font-medium text-[#4B2E2B]">Admin</span>
-        <span class="badge px-2 py-0.5 text-xs font-bold text-white bg-blue-500 rounded-full">1</span>
-      </div>
+      <!-- Conversations will be loaded dynamically -->
     </div>
   </div>
 
   <!-- Chat Window -->
   <div class="flex-grow flex flex-col bg-[#FFF8E7] rounded-r-lg">
     <div class="p-4 border-b border-[#D2B48C] flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-[#4B2E2B]" id="chatTitle">Chat with Vendor A</h2>
+      <h2 class="text-lg font-semibold text-[#4B2E2B]" id="chatTitle">Select a conversation to start messaging</h2>
       <button class="gradient-btn" id="newMessageBtn">New Message</button>
     </div>
 
-    <div class="flex-grow p-6 overflow-y-auto space-y-4" id="chatMessages"></div>
+    <div class="flex-grow p-6 overflow-y-auto space-y-4" id="chatMessages">
+      <div class="text-center text-gray-500 mt-8">
+        <p class="text-lg mb-2">Welcome to Messaging!</p>
+        <p>Select a user from the left panel to start a conversation.</p>
+        <p class="text-sm mt-4">💡 Tip: Click on any user to begin messaging them.</p>
+      </div>
+    </div>
 
     <!-- Chat Input with Emoji -->
-    <div class="p-4 border-t border-[#D2B48C] flex items-center relative">
-      <input type="text" placeholder="Type a message" id="chatInput"
-             class="flex-grow p-3 border border-[#D2B48C] focus:outline-none focus:ring-2 focus:ring-coffee rounded-l-md text-sm bg-[#FFF8E7]">
-      <button id="emojiBtn" class="gradient-btn mx-2 rounded-full text-lg">😀</button>
-      <button id="sendBtn" class="gradient-btn rounded-r-md">Send</button>
+    <div class="p-4 border-t border-[#D2B48C] relative">
+      <div class="flex items-center">
+        <input type="text" placeholder="Type a message" id="chatInput"
+               class="flex-grow p-3 border border-[#D2B48C] focus:outline-none focus:ring-2 focus:ring-coffee rounded-l-md text-sm bg-[#FFF8E7]">
+        <button id="emojiBtn" class="gradient-btn mx-2 rounded-full text-lg">😀</button>
+        <button id="sendBtn" class="gradient-btn rounded-r-md">Send</button>
+      </div>
+
+      <!-- Emoji Picker -->
+      <div id="emojiPicker" class="emoji-picker grid">
+        <span>😀</span><span>😂</span><span>😍</span><span>👍</span><span>🎉</span><span>🙌</span>
+        <span>😢</span><span>😎</span><span>😡</span><span>👏</span><span>💯</span><span>🔥</span>
+      </div>
+    </div>
+
+<!-- New Message Modal -->
+<div id="newMessageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Start New Conversation</h3>
+    </div>
+    <div class="p-4">
+      <input type="text" id="userSearchInput" placeholder="Search users by name or email..."
+             class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-coffee text-sm bg-white dark:bg-gray-700 dark:text-white">
+      <div id="searchResults" class="mt-3 max-h-60 overflow-y-auto space-y-2">
+        <!-- Search results will appear here -->
+      </div>
+    </div>
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-2">
+      <button id="cancelNewMessage" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Emoji Picker -->
-<div id="emojiPicker" class="emoji-picker grid hidden">
-  <span>😀</span><span>😂</span><span>😍</span><span>👍</span><span>🎉</span><span>🙌</span>
-  <span>😢</span><span>😎</span><span>😡</span><span>👏</span><span>💯</span><span>🔥</span>
-</div>
-
 <script>
-const chats = {
-  "Vendor A": [
-    { text: "Hi there!", me: false, time: "09:20", reactions: [] },
-    { text: "Can we ship weekly?", me: false, time: "09:21", reactions: [] }
-  ],
-  "Cafe B": [],
-  "Admin": []
-};
-let activeChat = "Vendor A";
+let activeChat = null;
+let currentUserId = null;
 
-const chatMessages = document.getElementById("chatMessages");
-const chatTitle = document.getElementById("chatTitle");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const chatItems = document.querySelectorAll(".chat-item");
-const newMessageBtn = document.getElementById("newMessageBtn");
-const toggleDarkBtn = document.getElementById("toggleDark");
-const emojiPicker = document.getElementById("emojiPicker");
-const emojiBtn = document.getElementById("emojiBtn");
+// --- Initialize ---
+async function initializeMessaging() {
+  // Check if user is logged in
+  try {
+    const response = await fetch('../backend/check_session.php', {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
 
-// --- Render Chat ---
-function renderChat(name){
+    if (!response.ok) {
+      alert('Error checking session. Please try logging in again.');
+      window.location.href = '1.C4F3_login.html';
+      return;
+    }
+
+    const sessionData = await response.json();
+
+    if (!sessionData.logged_in) {
+      alert('Please log in to access messaging');
+      window.location.href = '1.C4F3_login.html';
+      return;
+    }
+
+    currentUserId = sessionData.user_id;
+    await loadConversations();
+  } catch (error) {
+    alert('Error loading messaging system: ' + error.message);
+  }
+}
+
+// --- Load Conversations ---
+async function loadConversations() {
+  try {
+    const response = await fetch('../backend/get_conversations.php');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      renderConversations(data.conversations);
+    } else {
+      alert('Error loading conversations: ' + data.message);
+    }
+  } catch (error) {
+    alert('Error loading conversations: ' + error.message);
+  }
+}
+
+// --- Render Conversations ---
+function renderConversations(conversations) {
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML = "";
+
+  if (conversations.length === 0) {
+    chatList.innerHTML = `
+      <div class="p-4 text-center text-gray-500">
+        <p class="mb-2">No conversations yet.</p>
+        <p class="text-sm">Click "New Message" to start chatting with someone!</p>
+      </div>
+    `;
+    return;
+  }
+
+  conversations.forEach(conv => {
+    const convDiv = document.createElement("div");
+    convDiv.className = "flex items-center justify-between p-3 border border-[#D2B48C] rounded-lg cursor-pointer chat-item";
+    convDiv.dataset.userId = conv.user_id;
+    convDiv.innerHTML = `
+      <span class="font-semibold text-[#4B2E2B]">${conv.display_name}</span>
+      ${conv.unread_count > 0 ? `<span class="badge px-2 py-0.5 text-xs font-bold text-white bg-blue-500 rounded-full">${conv.unread_count}</span>` : ''}
+    `;
+    convDiv.addEventListener("click", () => switchChat(conv.user_id, conv.display_name));
+    chatList.appendChild(convDiv);
+  });
+}
+
+// --- Switch Chat ---
+async function switchChat(userId, displayName) {
+  activeChat = userId;
+  document.getElementById("chatTitle").textContent = "Chat with " + displayName;
+
+  // Mark messages as read
+  await markAsRead(userId);
+
+  // Load messages
+  await loadMessages(userId);
+
+  // Update active state
+  document.querySelectorAll('.chat-item').forEach(item => {
+    item.classList.remove('bg-[#F0E5D8]');
+    if (item.dataset.userId == userId) {
+      item.classList.add('bg-[#F0E5D8]');
+    }
+  });
+}
+
+// --- Load Messages ---
+async function loadMessages(userId) {
+  try {
+    const response = await fetch(`../backend/get_messages.php?user_id=${userId}`);
+    const data = await response.json();
+
+    if (data.success) {
+      renderMessages(data.messages);
+    }
+  } catch (error) {
+    // Silently handle message loading errors
+  }
+}
+
+// --- Render Messages ---
+function renderMessages(messages) {
+  const chatMessages = document.getElementById("chatMessages");
   chatMessages.innerHTML = "";
-  chats[name].forEach(msg => addMessage(msg.text,msg.me,msg.time));
-  chatTitle.textContent = "Chat with " + name;
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  messages.forEach(msg => {
+    addMessage(msg.text, msg.me, msg.time);
+  });
 }
 
 // --- Add Message ---
-function addMessage(text, me=true, time=null){
-  const msgTime = time || new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+function addMessage(text, me = true, time = null) {
+  const msgTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgDiv = document.createElement("div");
-  msgDiv.className = `flex ${me?'justify-end':'justify-start'} chat-animate message-container`;
+  msgDiv.className = `flex ${me ? 'justify-end' : 'justify-start'} chat-animate message-container`;
 
   const bubble = document.createElement("div");
   bubble.className = me ? "outgoing" : "incoming";
   bubble.innerHTML = `<span class="message-text">${text}</span>
                       <div class="message-time">${msgTime}</div>`;
   msgDiv.appendChild(bubble);
-  chatMessages.appendChild(msgDiv);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  document.getElementById("chatMessages").appendChild(msgDiv);
+  document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
 }
 
 // --- Send Message ---
-sendBtn.addEventListener("click",()=>{
+async function sendMessage() {
+  const chatInput = document.getElementById("chatInput");
   const text = chatInput.value.trim();
-  if(!text) return;
-  addMessage(text,true);
-  chats[activeChat].push({text,me:true,time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),reactions:[]});
-  chatInput.value="";
-  simulateIncomingMessage(activeChat);
-});
+  if (!text || !activeChat) return;
 
-// --- Switch Chat ---
-chatItems.forEach(item=>{
-  item.addEventListener("click",()=>{
-    activeChat=item.dataset.chat;
-    renderChat(activeChat);
+  try {
+    const response = await fetch('../backend/send_message.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        receiver_id: activeChat,
+        message: text
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      addMessage(text, true);
+      chatInput.value = "";
+      // Refresh conversations to update last message time
+      await loadConversations();
+    } else {
+      alert('Error sending message: ' + data.message);
+    }
+  } catch (error) {
+    alert('Error sending message');
+  }
+}
+
+// --- Mark as Read ---
+async function markAsRead(userId) {
+  try {
+    await fetch(`../backend/mark_read.php?user_id=${userId}`);
+  } catch (error) {
+    // Silently handle read status errors
+  }
+}
+
+// --- New Message Modal Functions ---
+function openNewMessageModal() {
+  const modal = document.getElementById("newMessageModal");
+  const searchInput = document.getElementById("userSearchInput");
+  const searchResults = document.getElementById("searchResults");
+
+  searchInput.value = "";
+  searchResults.innerHTML = '<div class="text-center text-gray-500 text-sm">Start typing to search for users...</div>';
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  searchInput.focus();
+}
+
+function closeNewMessageModal() {
+  const modal = document.getElementById("newMessageModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+// --- Search Users ---
+async function searchUsers(query) {
+  if (query.length < 2) {
+    document.getElementById("searchResults").innerHTML = '<div class="text-center text-gray-500 text-sm">Type at least 2 characters to search...</div>';
+    return;
+  }
+
+  try {
+    const response = await fetch(`../backend/search_users.php?search=${encodeURIComponent(query)}`);
+    const data = await response.json();
+
+    if (data.success) {
+      renderSearchResults(data.users);
+    } else {
+      document.getElementById("searchResults").innerHTML = '<div class="text-center text-red-500 text-sm">Error searching users</div>';
+    }
+  } catch (error) {
+    document.getElementById("searchResults").innerHTML = '<div class="text-center text-red-500 text-sm">Error searching users</div>';
+  }
+}
+
+// --- Render Search Results ---
+function renderSearchResults(users) {
+  const searchResults = document.getElementById("searchResults");
+
+  if (users.length === 0) {
+    searchResults.innerHTML = '<div class="text-center text-gray-500 text-sm">No users found</div>';
+    return;
+  }
+
+  searchResults.innerHTML = "";
+  users.forEach(user => {
+    const userDiv = document.createElement("div");
+    userDiv.className = "flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700";
+    userDiv.innerHTML = `
+      <div>
+        <div class="font-semibold text-gray-900 dark:text-white">${user.display_name}</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">${user.email}</div>
+      </div>
+      <button class="message-user-btn px-3 py-1 text-sm bg-coffee text-white rounded-md hover:bg-opacity-80" data-user-id="${user.user_id}" data-display-name="${user.display_name}">Message</button>
+    `;
+    userDiv.querySelector('.message-user-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      startConversationWithUser(user.user_id, user.display_name);
+    });
+    searchResults.appendChild(userDiv);
   });
+}
+
+// --- Start Conversation ---
+function startConversationWithUser(userId, displayName) {
+  closeNewMessageModal();
+  switchChat(userId, displayName);
+}
+
+// --- Event Listeners ---
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+document.getElementById("chatInput").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    sendMessage();
+  }
 });
 
-// --- New Message Button ---
-newMessageBtn.addEventListener("click",()=>chatInput.focus());
+document.getElementById("newMessageBtn").addEventListener("click", () => {
+  openNewMessageModal();
+});
 
-// --- Dark Mode ---
-toggleDarkBtn.addEventListener("click",()=>{document.body.classList.toggle("dark-mode");});
+document.getElementById("toggleDark").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});
+
+// --- Search Modal Event Listeners ---
+document.getElementById("cancelNewMessage").addEventListener("click", closeNewMessageModal);
+
+document.getElementById("userSearchInput").addEventListener("input", (e) => {
+  const query = e.target.value.trim();
+  searchUsers(query);
+});
+
+document.getElementById("userSearchInput").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById("newMessageModal").addEventListener("click", (e) => {
+  if (e.target.id === "newMessageModal") {
+    closeNewMessageModal();
+  }
+});
 
 // --- Emoji Picker ---
+const emojiPicker = document.getElementById("emojiPicker");
+const emojiBtn = document.getElementById("emojiBtn");
+
 emojiBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   emojiPicker.style.display = emojiPicker.style.display === "grid" ? "none" : "grid";
 });
+
 emojiPicker.querySelectorAll("span").forEach(emoji => {
   emoji.addEventListener("click", () => {
-    chatInput.value += emoji.textContent;
+    document.getElementById("chatInput").value += emoji.textContent;
     emojiPicker.style.display = "none";
-    chatInput.focus();
+    document.getElementById("chatInput").focus();
   });
 });
+
 document.addEventListener("click", (e) => {
-  if(!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.style.display = "none";
+  if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+    emojiPicker.style.display = "none";
+  }
 });
 
-// --- Simulate Incoming Messages ---
-function simulateIncomingMessage(chatName){
-  const typingDiv = document.createElement("div");
-  typingDiv.className="flex justify-start chat-animate";
-  typingDiv.innerHTML=`<div class="incoming p-3 max-w-md rounded-xl rounded-tl-none shadow-sm">
-    <div class="typing">
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
-      <span class="typing-dot"></span>
-    </div>
-  </div>`;
-  chatMessages.appendChild(typingDiv);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-
-  setTimeout(()=>{
-    chatMessages.removeChild(typingDiv);
-    const replies = ["Got it! ✅","Thanks!","Will do.","👌","Noted!"];
-    const reply = replies[Math.floor(Math.random()*replies.length)];
-    addMessage(reply,false);
-    chats[chatName].push({text:reply,me:false,time:new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),reactions:[]});
-  },1500+Math.random()*1500);
-}
-
-// --- Initial Render ---
-renderChat(activeChat);
+// --- Initialize on page load ---
+document.addEventListener("DOMContentLoaded", initializeMessaging);
 </script>
 </body>
 </html>

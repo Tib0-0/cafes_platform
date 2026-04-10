@@ -164,8 +164,24 @@ body.dark .glass{
 </style>
 </head>
 
-<body class="light font-sans min-h-screen p-8 flex items-center justify-center">
+<body class="light font-sans min-h-screen p-8">
 
+<!-- LIST VIEW -->
+<div id="listView" class="hidden">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Pending Products</h1>
+      <button onclick="toggleTheme()" class="glass px-4 py-2 text-xl rounded-lg">🌙</button>
+    </div>
+    
+    <div id="productsList" class="grid gap-4">
+      <p class="opacity-60 text-center py-8">Loading products...</p>
+    </div>
+  </div>
+</div>
+
+<!-- SINGLE PRODUCT REVIEW VIEW -->
+<div id="reviewView" class="hidden flex items-center justify-center min-h-screen">
 <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
 
 <!-- PRODUCT -->
@@ -202,13 +218,9 @@ body.dark .glass{
     </button>
   </div>
 
-  <div>
-    <h3 class="font-semibold mb-2">📝 Admin Notes</h3>
-    <textarea rows="7" class="w-full rounded-xl p-4"
-      placeholder="Internal moderation notes..."></textarea>
-  </div>
 </div>
 
+</div>
 </div>
 
 <!-- MODAL -->
@@ -288,27 +300,59 @@ overlay.onclick=closeModal
 
 const params = new URLSearchParams(window.location.search);
 const adId = params.get("ad_id");
+const listView = document.getElementById('listView');
+const reviewView = document.getElementById('reviewView');
 
-if (!adId) {
-  alert("Invalid product");
-  location.href = "14.C4F3_Admin_Dashboard_page.html";
+if (adId) {
+  reviewView.classList.remove('hidden');
+  
+  fetch(`../backend/admin/get_product.php?ad_id=${adId}`)
+    .then(res => res.json())
+    .then(p => {
+      if (!p.ad_id) {
+        alert("Product not found");
+        return;
+      }
+
+      document.getElementById("productName").innerText = "☕ " + p.product_name;
+      document.getElementById("vendorName").innerText = "🏪 Vendor: " + p.vendor_name;
+      document.getElementById("category").innerText = "📦 Category: " + p.category;
+      document.getElementById("price").innerText = "💰 ₱" + p.price;
+      document.getElementById("description").innerText = p.description;
+      document.getElementById("productImage").src = "../" + p.image_url;
+    });
+} else {
+  listView.classList.remove('hidden');
+  
+  fetch('../backend/admin/get_pending_products.php')
+    .then(res => res.json())
+    .then(products => {
+      const productsList = document.getElementById('productsList');
+      
+      if (!products || products.length === 0) {
+        productsList.innerHTML = "<p class='opacity-60 text-center py-8'>No pending products</p>";
+        return;
+      }
+      
+      productsList.innerHTML = products.map(p => `
+        <div class="glass p-6 rounded-lg flex justify-between items-center">
+          <div class="flex-1">
+            <h3 class="font-bold text-lg">☕ ${p.product_name}</h3>
+            <p class="text-sm opacity-70">Vendor: ${p.vendor_name}</p>
+            <p class="text-sm opacity-70">Category: ${p.category} | Price: ₱${p.price}</p>
+            <p class="text-xs opacity-60 mt-2">Submitted: ${new Date(p.created_at).toLocaleDateString()}</p>
+          </div>
+          <button class="glass-btn glass-approve" onclick="location.href='15.C4F3_Admin_Product_Review_Page.html?ad_id=${p.ad_id}'">
+            Review
+          </button>
+        </div>
+      `).join('');
+    })
+    .catch(err => {
+      console.error('Error loading products:', err);
+      document.getElementById('productsList').innerHTML = "<p class='opacity-60 text-center py-8'>Error loading products</p>";
+    });
 }
-
-fetch(`../backend/admin/get_product.php?ad_id=${adId}`)
-  .then(res => res.json())
-  .then(p => {
-    if (!p.ad_id) {
-      alert("Product not found");
-      return;
-    }
-
-    document.getElementById("productName").innerText = "☕ " + p.product_name;
-    document.getElementById("vendorName").innerText = "🏪 Vendor: " + p.vendor_name;
-    document.getElementById("category").innerText = "📦 Category: " + p.category;
-    document.getElementById("price").innerText = "💰 ₱" + p.price;
-    document.getElementById("description").innerText = p.description;
-    document.getElementById("productImage").src = "../" + p.image_url;
-  });
 
 </script>
 

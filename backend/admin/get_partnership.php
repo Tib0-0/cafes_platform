@@ -20,17 +20,25 @@ $db = (new Database())->getConnection();
 $stmt = $db->prepare("
     SELECT 
         pr.request_id,
+        pr.ad_id,
         pr.message,
         pr.proposed_terms,
         pr.status,
         pr.created_at,
 
         c.username AS cafe_name,
-        v.username AS vendor_name
+        v.username AS vendor_name,
+        
+        pa.product_name,
+        pa.description,
+        pa.price,
+        pa.category,
+        pa.image_url
 
     FROM partnership_requests pr
     JOIN users c ON pr.cafe_owner_id = c.user_id
     JOIN users v ON pr.vendor_id = v.user_id
+    LEFT JOIN product_ads pa ON pr.ad_id = pa.ad_id
     WHERE pr.request_id = ?
 ");
 

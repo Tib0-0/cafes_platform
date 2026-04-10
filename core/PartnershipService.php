@@ -19,8 +19,8 @@ class PartnershipService extends BaseService {
      */
     public function createRequest(array $data) {
         // Validate
-        if (!isset($data['vendor_id']) || !isset($data['cafe_owner_id'])) {
-            $this->addError("Vendor and cafe owner are required");
+        if (!isset($data['vendor_id']) || !isset($data['cafe_owner_id']) || !isset($data['ad_id'])) {
+            $this->addError("Vendor, cafe owner, and product are required");
             return false;
         }
 
@@ -31,10 +31,12 @@ class PartnershipService extends BaseService {
         }
 
         $partnershipData = [
+            'ad_id' => (int)$data['ad_id'],
             'vendor_id' => (int)$data['vendor_id'],
             'cafe_owner_id' => (int)$data['cafe_owner_id'],
             'status' => 'pending',
             'message' => trim($data['message'] ?? ''),
+            'proposed_terms' => trim($data['proposed_terms'] ?? ''),
             'created_at' => date('Y-m-d H:i:s')
         ];
 
@@ -95,8 +97,8 @@ class PartnershipService extends BaseService {
      * Validate partnership data (override abstract method)
      */
     public function validate(array $data) {
-        if (empty($data['vendor_id']) || empty($data['cafe_owner_id'])) {
-            $this->addError("Vendor and cafe owner IDs are required");
+        if (empty($data['vendor_id']) || empty($data['cafe_owner_id']) || empty($data['ad_id'])) {
+            $this->addError("Vendor, cafe owner, and product IDs are required");
             return false;
         }
         return true;

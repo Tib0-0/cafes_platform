@@ -114,6 +114,26 @@ class UserService extends BaseService {
     }
 
     /**
+     * Search users for messaging
+     * @param string $searchTerm
+     * @param int $excludeUserId
+     * @return array|bool
+     */
+    public function searchUsers($searchTerm, $excludeUserId) {
+        if (empty($searchTerm)) {
+            $this->addError("Search term cannot be empty");
+            return false;
+        }
+
+        if (strlen($searchTerm) < 2) {
+            $this->addError("Search term must be at least 2 characters");
+            return false;
+        }
+
+        return $this->repository->searchUsers($searchTerm, $excludeUserId);
+    }
+
+    /**
      * Validate user data (override abstract method)
      */
     public function validate(array $data) {

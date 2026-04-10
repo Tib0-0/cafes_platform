@@ -130,20 +130,6 @@ thead th::after { content: ''; position: absolute; inset: 0; background: linear-
     </div>
 </div>
 
-<!-- IOS-STYLE MODAL -->
-<div id="modal" class="modal-bg">
-    <div class="modal-ios-advanced">
-        <div class="modal-ios-header">
-            <h2>User Details</h2>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
-        </div>
-        <div id="modalContent" class="modal-ios-body"></div>
-        <div class="modal-ios-footer">
-            <button class="btn-ios" onclick="closeModal()">Close</button>
-        </div>
-    </div>
-</div>
-
 <script>
 // ================= DATA & LOGIC =================
 let usersData = [];
@@ -185,10 +171,7 @@ function renderTable(data) {
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusClass} text-center">${user.status}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.created}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                <div class="flex justify-center space-x-2">
-                    <button class="btn" onclick="viewUser(${user.id})">
-                        <i class="fas fa-eye mr-1"></i>View
-                    </button>
+                <div class="flex justify-center">
                     <button class="btn" onclick="toggleStatus(${user.id})">
                          <i class="fas fa-ban mr-1"></i>${user.status === 'Active' ? 'Suspend' : 'Activate'}
                     </button>
@@ -206,30 +189,6 @@ document.getElementById("searchBtn").addEventListener("click", () => {
     currentPage = 1;
     renderTable(filtered);
 });
-
-function viewUser(id) {
-    const user = usersData.find(u => u.id === id);
-
-    document.getElementById("modalContent").innerHTML = `
-        <p><strong>Name:</strong><span>${user.name}</span></p>
-        <p><strong>Role:</strong><span>${user.role}</span></p>
-        <p><strong>Status:</strong><span>${user.status}</span></p>
-        <p><strong>Created:</strong><span>${user.created}</span></p>
-    `;
-
-    const modalBg = document.getElementById("modal");
-    modalBg.style.display = "flex";
-    modalBg.classList.add("show");
-}
-
-function closeModal() {
-    const modalBg = document.getElementById("modal");
-    const modal = document.querySelector(".modal-ios-advanced");
-    modal.style.transform = "translateY(50px) scale(0.92)";
-    modal.style.opacity = "0";
-    modalBg.classList.remove("show");
-    setTimeout(()=> modalBg.style.display = "none", 300);
-}
 
 function toggleStatus(userId) {
     fetch("../backend/admin/toggle_user_status.php", {

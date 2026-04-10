@@ -116,18 +116,7 @@
     .scrollbar::-webkit-scrollbar { width: 6px; }
     .scrollbar::-webkit-scrollbar-thumb { background-color: rgba(62, 47, 47, 0.5); border-radius: 3px; }
 
-    textarea { background: rgba(255, 255, 255, 0.8); color: #3e2f2f; transition: background 0.4s, color 0.4s; }
-
     .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; transition: background 0.4s, color 0.4s; }
-
-    .history-card { backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; transition: transform 0.2s ease, opacity 0.3s ease, background 0.4s, color 0.4s; position: relative; cursor: pointer; opacity: 0; animation: fadeIn 0.5s forwards; }
-    .history-card:hover { transform: translateY(-3px); }
-
-    .tooltip { visibility: hidden; background-color: rgba(62, 47, 47, 0.9); color: #fff; text-align: left; border-radius: 0.5rem; padding: 0.5rem; position: absolute; z-index: 10; top: 100%; left: 50%; transform: translateX(-50%); white-space: pre-line; font-size: 0.875rem; width: 200px; opacity: 0; transition: opacity 0.2s; }
-    .history-card:hover .tooltip { visibility: visible; opacity: 1; }
-
-    .filter-btn { padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; margin-right: 0.5rem; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); transition: background 0.4s, color 0.4s, border-color 0.4s; }
-    .filter-btn.active { background: rgba(255,255,255,0.25); }
 
     @keyframes fadeIn { from {opacity:0; transform: translateY(5px);} to {opacity:1; transform: translateY(0);} }
 
@@ -167,6 +156,22 @@
 </head>
 <body>
 
+<!-- LIST VIEW -->
+<div id="listView" class="hidden p-4">
+  <div class="container mx-auto max-w-7xl">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Pending Partnership Requests</h1>
+    </div>
+    
+    <div id="requestsList" class="grid gap-4">
+      <p class="opacity-60 text-center py-8">Loading requests...</p>
+    </div>
+  </div>
+</div>
+
+<!-- SINGLE PARTNERSHIP REVIEW VIEW -->
+<div id="reviewView" class="hidden">
+
 <!-- Dark/Light Mode Toggle -->
 <div id="themeToggle">
     <i id="toggleIcon" class="fas fa-sun text-yellow-500"></i>
@@ -181,199 +186,50 @@
 <div class="container mx-auto max-w-7xl p-4">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Request Details -->
+        <!-- Request Details - Left Side -->
         <div id="requestDetails" class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-4">
             <h2 class="text-xl font-bold border-b border-white/30 pb-2 mb-4 flex items-center gap-2">
                 <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
                 Request Details
             </h2>
-            <div id="cafeName" class="p-4 rounded-md bg-white/20 font-medium"></div>
-            <div id="vendorName" class="p-4 rounded-md bg-white/20 font-medium"></div>
-            <div class="p-4 rounded-md bg-white/20 font-medium flex items-center gap-2"><i class="fas fa-box"></i> Product : no ad_id or product_id at database</div>
-            <div id="proposedTerms" class="p-4 rounded-md bg-white/20 font-medium"></div>
-            <div id="messageBox"
-                class="p-4 h-48 rounded-md bg-white/10 text-sm scrollbar overflow-y-auto">
+            <div id="cafeName" class="p-4 rounded-md bg-white/20 font-medium text-center"></div>
+            <div id="vendorName" class="p-4 rounded-md bg-white/20 font-medium text-center"></div>
+            <div id="productName" class="p-4 rounded-md bg-white/20 font-medium text-center"></div>
+            <div id="productPrice" class="p-4 rounded-md bg-white/20 text-sm text-center"></div>
+            <div id="productCategory" class="p-4 rounded-md bg-white/20 text-sm text-center"></div>
+            <div id="proposedTerms" class="p-4 rounded-md bg-white/20 font-medium text-center"></div>
+            <div id="messageBox" class="p-4 h-40 rounded-md bg-white/10 text-sm scrollbar overflow-y-auto text-center"></div>
+            
+            <!-- Decision Buttons -->
+            <div class="flex gap-4 mt-6 pt-4 border-t border-white/20">
+                <button id="approveBtn" class="btn-approve flex-1">
+                    <i class="fas fa-check mr-2"></i>Approve
+                </button>
+                <button id="rejectBtn" class="btn-reject flex-1">
+                    <i class="fas fa-times mr-2"></i>Reject
+                </button>
             </div>
         </div>
 
-        <!-- Decision & Notes -->
-        <div class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-6">
-            <div class="border-b border-white/30 pb-4">
-                <h2 class="text-xl font-bold mb-3 flex items-center gap-2">
-                    <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
-                    Decision 
-                    <span id="statusBadge" class="status-badge bg-gray-300 text-gray-800">Pending</span>
-                </h2>
-                <div class="flex space-x-4 flex-wrap">
-                    <button id="approveBtn" class="btn-approve"><i class="fas fa-check"></i> Approve</button>
-                    <button id="rejectBtn" class="btn-reject"><i class="fas fa-times"></i> Reject</button>
-                </div>
+        <!-- Product Image - Right Side -->
+        <div id="productImageContainer" class="lg:col-span-2 glass-card p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center min-h-96">
+            <img id="productImageImg" src="" alt="Product" class="max-w-full max-h-96 rounded-lg shadow-2xl object-cover" style="display: none;">
+            <div id="imagePlaceholder" class="text-center opacity-60">
+                <i class="fas fa-image text-6xl mb-4"></i>
+                <p>No image available</p>
             </div>
-            <div>
-                <h2 class="text-xl font-bold mb-3 flex items-center gap-2">
-                    <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
-                    Internal Note
-                </h2>
-                <textarea id="internalNote" placeholder="Enter internal notes..." rows="6"
-                    class="w-full px-4 py-3 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-yellow-300"></textarea>
-                <div class="mt-2 text-sm text-white/80" id="notePreview">Live preview of your notes...</div>
-            </div>
-        </div>
-
-        <!-- History Panel -->
-        <div class="lg:col-span-1 glass-card p-6 rounded-2xl shadow-lg space-y-4">
-            <h2 class="text-xl font-bold border-b border-white/30 pb-2 mb-4 flex items-center gap-2">
-                <span class="coffee-cup"><i class="fas fa-mug-saucer"></i></span>
-                Decision History
-            </h2>
-            <div class="mb-4 flex flex-wrap gap-2">
-                <span class="filter-btn active" data-filter="all">All</span>
-                <span class="filter-btn" data-filter="Approved">Approved</span>
-                <span class="filter-btn" data-filter="Rejected">Rejected</span>
-            </div>
-            <div id="historyList" class="overflow-y-auto max-h-[400px] lg:max-h-[500px] scrollbar"></div>
         </div>
 
     </div>
 </div>
 
-<!-- Modal -->
-<div id="modal" class="modal-bg flex">
-    <div class="modal">
-        <h2 id="modalTitle">Preview</h2>
-        <p id="modalNote"></p>
-        <button id="modalCloseBtn" onclick="closeModal()">Close</button>
-    </div>
 </div>
 
 <script>
-const approveBtn = document.getElementById('approveBtn');
-const rejectBtn = document.getElementById('rejectBtn');
-const statusBadge = document.getElementById('statusBadge');
-const noteArea = document.getElementById('internalNote');
-const notePreview = document.getElementById('notePreview');
-const historyList = document.getElementById('historyList');
-const filterBtns = document.querySelectorAll('.filter-btn');
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modalTitle');
-const modalNote = document.getElementById('modalNote');
-
-const historyEntries = [];
-
-function addHistoryEntry(action, note) {
-    const timestamp = new Date().toLocaleString();
-    const entry = { action, note, timestamp };
-    historyEntries.unshift(entry);
-    renderHistory(document.querySelector('.filter-btn.active').dataset.filter);
-}
-
-function renderHistory(filter='all') {
-    historyList.innerHTML = '';
-    historyEntries.forEach(entry => {
-        if(filter !== 'all' && entry.action !== filter) return;
-
-        const card = document.createElement('div');
-        card.className = 'history-card text-white/90';
-        let bgColor = entry.action === 'Approved' ? 'rgba(72, 187, 120, 0.2)' :
-                      entry.action === 'Rejected' ? 'rgba(244, 115, 32, 0.2)' :
-                      'rgba(255,255,255,0.1)';
-        card.style.background = bgColor;
-
-        const icon = entry.action === 'Approved' ? '<i class="fas fa-check"></i>' :
-                     entry.action === 'Rejected' ? '<i class="fas fa-times"></i>' :
-                     '<i class="fas fa-hourglass-half"></i>';
-
-        card.innerHTML = `
-            <div class="flex justify-between items-center mb-1">
-                <span class="font-semibold">${icon} ${entry.action}</span>
-                <span class="text-xs">${entry.timestamp}</span>
-            </div>
-            <div class="tooltip">${entry.note || 'No note provided.'}</div>
-        `;
-        historyList.appendChild(card);
-    });
-}
-
-function openModal(title, note, actionColor) {
-    modalTitle.textContent = title;
-    modalNote.textContent = note || 'No note provided.';
-    modal.style.display = 'flex';
-    if(actionColor === 'Approved') {
-        modal.style.background = 'rgba(72, 187, 120, 0.25)';
-        modal.style.borderColor = 'rgba(72, 187, 120, 0.5)';
-    } else if(actionColor === 'Rejected') {
-        modal.style.background = 'rgba(244, 115, 32, 0.25)';
-        modal.style.borderColor = 'rgba(244, 115, 32, 0.5)';
-    } else {
-        modal.style.background = 'rgba(255,255,255,0.15)';
-        modal.style.borderColor = 'rgba(255,255,255,0.2)';
-    }
-}
-
-function closeModal() {
-    modal.style.display = 'none';
-}
-
-approveBtn.onclick = () => handleDecision("approve");
-rejectBtn.onclick = () => handleDecision("reject");
-
-function handleDecision(action) {
-  if (!requestId) {
-    alert("Invalid request ID");
-    return;
-  }
-
-  fetch("../backend/admin/approve_reject_partnership.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      request_id: requestId,
-      action: action,
-      note: noteArea.value
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) {
-      alert(data.message || "Action failed");
-      return;
-    }
-
-    const statusText = action === "approve" ? "Approved" : "Rejected";
-    const statusClass = action === "approve"
-      ? "status-badge bg-green-500 text-white"
-      : "status-badge bg-red-500 text-white";
-
-    statusBadge.textContent = statusText;
-    statusBadge.className = statusClass;
-
-    addHistoryEntry(statusText, noteArea.value);
-    openModal(statusText + " Preview", noteArea.value, statusText);
-
-    // ✅ AUTO-REDIRECT BACK TO DASHBOARD
-    setTimeout(() => {
-      window.location.href = "14.C4F3_Admin_Dashboard_page.html";
-    }, 800);
-  })
-  .catch(err => {
-    console.error(err);
-    alert("Server error");
-  });
-}
-
-
-
-noteArea.addEventListener('input', () => {
-    notePreview.textContent = noteArea.value || "Live preview of your notes...";
-});
-
-filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderHistory(btn.dataset.filter);
-    });
-});
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get("request_id");
+const listView = document.getElementById('listView');
+const reviewView = document.getElementById('reviewView');
 
 // Dark/Light Toggle
 const toggle = document.getElementById('themeToggle');
@@ -385,34 +241,20 @@ function applyTheme() {
         document.body.style.background = 'linear-gradient(135deg, #2c2c2c, #1a1a1a)';
         document.body.style.color = '#f5f5f5';
         toggleIcon.className = 'fas fa-moon text-gray-200';
-        document.querySelectorAll('.glass-card, .modal, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
+        document.querySelectorAll('.glass-card, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
             el.style.backgroundColor = 'rgba(255,255,255,0.05)';
             el.style.color = '#f5f5f5';
             el.style.borderColor = 'rgba(255,255,255,0.2)';
         });
-        document.querySelectorAll('.filter-btn').forEach(el => {
-            el.style.borderColor = 'rgba(255,255,255,0.3)';
-            el.style.color = '#f5f5f5';
-        });
-        document.querySelector('textarea').style.backgroundColor = 'rgba(255,255,255,0.1)';
-        document.querySelector('textarea').style.color = '#f5f5f5';
-        document.getElementById('notePreview').style.color = '#f5f5f5';
     } else {
         document.body.style.background = 'linear-gradient(135deg, #a9746e, #f4e1d2)';
         document.body.style.color = '#3e2f2f';
         toggleIcon.className = 'fas fa-sun text-yellow-500';
-        document.querySelectorAll('.glass-card, .modal, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
+        document.querySelectorAll('.glass-card, #requestDetails div.p-4, .btn-approve, .btn-reject').forEach(el => {
             el.style.backgroundColor = 'rgba(255,255,255,0.15)';
             el.style.color = '#3e2f2f';
             el.style.borderColor = 'rgba(255,255,255,0.2)';
         });
-        document.querySelectorAll('.filter-btn').forEach(el => {
-            el.style.borderColor = 'rgba(255,255,255,0.3)';
-            el.style.color = '#3e2f2f';
-        });
-        document.querySelector('textarea').style.backgroundColor = 'rgba(255,255,255,0.8)';
-        document.querySelector('textarea').style.color = '#3e2f2f';
-        document.getElementById('notePreview').style.color = '#ffffffcc';
     }
 }
 
@@ -421,41 +263,130 @@ toggle.addEventListener('click', () => {
     applyTheme();
 });
 
-// Initialize theme
-applyTheme();
+if (requestId) {
+  // Show single partnership review
+  reviewView.classList.remove('hidden');
+  
+  fetch(`../backend/admin/get_partnership.php?request_id=${requestId}`)
+    .then(res => res.json())
+    .then(r => {
+      if (!r.request_id) {
+          alert("Request not found");
+          return;
+      }
 
-const params = new URLSearchParams(window.location.search);
-const requestId = params.get("request_id");
+      document.getElementById("cafeName").innerHTML =
+        `<i class="fas fa-coffee"></i> Cafe: ${r.cafe_name}`;
 
-if (!requestId) {
-    alert("Invalid request");
-    location.href = "14.C4F3_Admin_Dashboard_page.html";
-}
+      document.getElementById("vendorName").innerHTML =
+        `<i class="fas fa-store"></i> Vendor: ${r.vendor_name}`;
 
-fetch(`../backend/admin/get_partnership.php?request_id=${requestId}`)
-  .then(res => res.json())
-  .then(r => {
-    if (!r.request_id) {
-        alert("Request not found");
-        return;
+      document.getElementById("productName").innerHTML =
+        `<i class="fas fa-box"></i> Product: <strong>${r.product_name || 'N/A'}</strong>`;
+
+      if (r.image_url) {
+        const imgElement = document.getElementById('productImageImg');
+        const placeholder = document.getElementById('imagePlaceholder');
+        imgElement.src = "../" + r.image_url;
+        imgElement.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+      }
+
+      document.getElementById("productPrice").innerHTML =
+        `<strong>Price:</strong> ₱${r.price ? parseFloat(r.price).toFixed(2) : 'N/A'}`;
+
+      document.getElementById("productCategory").innerHTML =
+        `<strong>Category:</strong> ${r.category || 'N/A'}`;
+
+      document.getElementById("proposedTerms").innerHTML =
+        `<i class="fas fa-handshake"></i> ${r.proposed_terms || "—"}`;
+
+      document.getElementById("messageBox").innerHTML =
+        `<strong>Message:</strong><br>${r.message || "—"}`;
+    })
+    .catch(err => {
+      console.error('Error loading partnership:', err);
+      alert("Error loading partnership details");
+    });
+
+  // Set up decision buttons
+  const approveBtn = document.getElementById('approveBtn');
+  const rejectBtn = document.getElementById('rejectBtn');
+
+  approveBtn.onclick = () => handleDecision("approve");
+  rejectBtn.onclick = () => handleDecision("reject");
+
+  function handleDecision(action) {
+    if (!requestId) {
+      alert("Invalid request ID");
+      return;
     }
 
-    document.getElementById("cafeName").innerHTML =
-      `<i class="fas fa-coffee"></i> Cafe: ${r.cafe_name}`;
+    fetch("../backend/admin/approve_reject_partnership.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        request_id: requestId,
+        action: action
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        alert(data.message || "Action failed");
+        return;
+      }
 
-    document.getElementById("vendorName").innerHTML =
-      `<i class="fas fa-store"></i> Vendor: ${r.vendor_name}`;
+      // ✅ AUTO-REDIRECT BACK TO DASHBOARD
+      setTimeout(() => {
+        window.location.href = "14.C4F3_Admin_Dashboard_Page.html";
+      }, 800);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Server error");
+    });
+  }
 
-    document.getElementById("proposedTerms").innerHTML =
-      `<i class="fas fa-handshake"></i> ${r.proposed_terms || "—"}`;
-
-    document.getElementById("messageBox").innerHTML =
-      `<strong>Message:</strong><br>${r.message || "—"}`;
-
-    statusBadge.textContent = r.status;
-  });
-
+} else {
+  // Show list of pending partnerships
+  listView.classList.remove('hidden');
   
+  fetch('../backend/admin/get_pending_partnerships.php')
+    .then(res => res.json())
+    .then(requests => {
+      const requestsList = document.getElementById('requestsList');
+      
+      if (!requests || requests.length === 0) {
+        requestsList.innerHTML = "<p class='opacity-60 text-center py-8'>No pending partnership requests</p>";
+        return;
+      }
+      
+      requestsList.innerHTML = requests.map(r => `
+        <div class="glass-card p-6 rounded-2xl flex justify-between items-center gap-4">
+          <div class="flex-1 flex gap-4 items-center">
+            ${r.image_url ? `<img src="../${r.image_url}" alt="Product" class="w-24 h-24 rounded-lg object-cover shadow-md">` : `<div class="w-24 h-24 rounded-lg bg-white/20 flex items-center justify-center"><i class="fas fa-image opacity-40 text-2xl"></i></div>`}
+            <div>
+              <h3 class="font-bold text-lg">🤝 ${r.cafe_name} ← ${r.vendor_name}</h3>
+              <p class="text-sm opacity-70 mt-1">Product: ${r.product_name || 'N/A'}</p>
+              <p class="text-sm opacity-70">Price: ₱${r.price ? parseFloat(r.price).toFixed(2) : 'N/A'}</p>
+              <p class="text-xs opacity-60 mt-2">Requested: ${new Date(r.created_at).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <button class="btn-approve" onclick="location.href='16.C4F3_Admin_Partnership_Review_Page.html?request_id=${r.request_id}'">
+            Review
+          </button>
+        </div>
+      `).join('');
+    })
+    .catch(err => {
+      console.error('Error loading partnerships:', err);
+      document.getElementById('requestsList').innerHTML = "<p class='opacity-60 text-center py-8'>Error loading requests</p>";
+    });
+}
+
+// Initialize theme
+applyTheme();
 
 </script>
 

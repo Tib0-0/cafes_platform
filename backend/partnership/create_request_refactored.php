@@ -17,20 +17,24 @@ if (!RequestValidator::isPost()) {
 }
 
 try {
+    $adId = RequestValidator::post('ad_id', '');
     $vendorId = RequestValidator::post('vendor_id', '');
     $cafeOwnerId = RequestValidator::post('cafe_owner_id', '');
     $message = RequestValidator::post('message', '');
+    $proposedTerms = RequestValidator::post('proposed_terms', '');
 
-    if (empty($vendorId) || empty($cafeOwnerId)) {
-        ResponseHelper::error("Validation failed", ["Vendor and cafe owner IDs are required"], 400);
+    if (empty($adId) || empty($vendorId) || empty($cafeOwnerId)) {
+        ResponseHelper::error("Validation failed", ["Product, vendor, and cafe owner IDs are required"], 400);
     }
 
     // Use PartnershipService to create request
     $partnershipService = new PartnershipService();
     $partnershipId = $partnershipService->createRequest([
+        'ad_id' => $adId,
         'vendor_id' => $vendorId,
         'cafe_owner_id' => $cafeOwnerId,
-        'message' => $message
+        'message' => $message,
+        'proposed_terms' => $proposedTerms
     ]);
 
     if (!$partnershipId) {

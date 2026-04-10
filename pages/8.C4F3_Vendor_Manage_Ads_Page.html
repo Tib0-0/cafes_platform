@@ -45,7 +45,6 @@ td[contenteditable]:focus { outline: 2px solid #D2691E; background-color: rgba(2
 <th class="px-4 py-2"><input type="checkbox" id="selectAll"/></th>
 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" id="sortViews">Views 🔽</th>
 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
 <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
 </tr>
@@ -58,17 +57,22 @@ td[contenteditable]:focus { outline: 2px solid #D2691E; background-color: rgba(2
 
 <div class="w-full md:w-96 bg-gray-50 p-4 rounded-xl shadow-inner flex flex-col gap-6">
 <h2 class="text-lg font-bold text-gray-800">Analytics</h2>
+<div>
+<p class="text-sm font-semibold text-gray-600 mb-2">Most Requested Products</p>
 <canvas id="viewsChart" class="bg-white rounded-lg p-2"></canvas>
+</div>
+<div>
+<p class="text-sm font-semibold text-gray-600 mb-2">Status Distribution</p>
 <canvas id="statusChart" class="bg-white rounded-lg p-2"></canvas>
+</div>
 </div>
 </div>
 
 <div class="flex flex-wrap gap-2 items-center mt-4">
 <input type="text" id="searchInput" placeholder="Search by title..." class="px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-[#D2691E] outline-none"/>
-<button class="status-btn badge badge-pending" data-status="Pending">Pending</button>
-<button class="status-btn badge badge-approved" data-status="Approved">Approved</button>
-<button class="status-btn badge badge-rejected" data-status="Rejected">Rejected</button>
-<button class="status-btn badge badge-archived" data-status="Archived">Archived</button>
+<button class="status-btn badge badge-pending" data-status="pending">Pending</button>
+<button class="status-btn badge badge-approved" data-status="approved">Approved</button>
+<button class="status-btn badge badge-rejected" data-status="rejected">Rejected</button>
 <button class="status-btn badge bg-gray-300 text-gray-700" data-status="All">All</button>
 <button id="bulkApprove" class="badge badge-approved">Bulk Approve</button>
 <button id="bulkReject" class="badge badge-rejected">Bulk Reject</button>
@@ -80,23 +84,13 @@ td[contenteditable]:focus { outline: 2px solid #D2691E; background-color: rgba(2
 <div id="toast" class="toast"></div>
 
 <script>
-let ads = [
-{title:'Arabica Beans 1kg', status:'Pending', views:234, created:'2025-01-08', image:'https://source.unsplash.com/200x100/?coffee'},
-{title:'Oat Milk', status:'Approved', views:541, created:'2025-01-02', image:'https://source.unsplash.com/200x100/?milk'},
-{title:'Paper Cups', status:'Rejected', views:112, created:'2024-12-28', image:'https://source.unsplash.com/200x100/?cup'},
-{title:'Espresso Machine', status:'Approved', views:320, created:'2025-01-05', image:'https://source.unsplash.com/200x100/?espresso'},
-{title:'Latte Cups', status:'Pending', views:145, created:'2025-01-10', image:'https://source.unsplash.com/200x100/?latte'},
-{title:'Milk Frother', status:'Approved', views:88, created:'2025-01-03', image:'https://source.unsplash.com/200x100/?frother'},
-{title:'Sugar Packets', status:'Pending', views:78, created:'2025-01-09', image:'https://source.unsplash.com/200x100/?sugar'},
-{title:'Cocoa Powder', status:'Rejected', views:92, created:'2024-12-30', image:'https://source.unsplash.com/200x100/?cocoa'},
-{title:'Vanilla Syrup', status:'Approved', views:410, created:'2025-01-06', image:'https://source.unsplash.com/200x100/?vanilla'},
-];
-
+let ads = [];
+let mostRequested = [];
+let statusCounts = {pending: 0, approved: 0, rejected: 0};
 let currentPage = 1;
 const rowsPerPage = 5;
-let filteredAds = [...ads];
+let filteredAds = [];
 let selectedRows = new Set();
-let sortAsc = true;
 
 function showToast(msg) {
 const t = document.getElementById('toast');
@@ -105,14 +99,38 @@ t.style.opacity='1';
 setTimeout(()=> t.style.opacity='0', 2000);
 }
 
+// Fetch data from backend
+async function loadData(){
+try {
+const response = await fetch('../backend/vendor_manage_ads.php', {
+  credentials: 'include'
+});
+const data = await response.json();
+if(data.error) { 
+  console.error('Backend error:', data);
+  showToast('Error: ' + data.error); 
+  return; 
+}
+ads = data.ads;
+mostRequested = data.mostRequested;
+statusCounts = data.statusCounts;
+filteredAds = [...ads];
+renderCarousel();
+renderTable();
+} catch(e){
+console.error('Error loading data:', e);
+showToast('Failed to load data: ' + e.message);
+}
+}
+
 function renderCarousel(){
 const carousel = document.getElementById('topCarousel');
 carousel.innerHTML='';
-const topAds = ads.filter(a=> a.status!=='Archived').slice().sort((a,b)=>b.views-a.views).slice(0,5);
+const topAds = ads.slice(0,5);
 topAds.forEach(ad=>{
 const item = document.createElement('div');
 item.className='carousel-item';
-item.innerHTML=`<img src="${ad.image}" /><h3>${ad.title}</h3><p class="views">${ad.views} views</p>`;
+item.innerHTML=`<img src="${ad.image}" /><h3>${ad.title}</h3><p class="views">${ad.category}</p>`;
 carousel.appendChild(item);
 });
 }
@@ -126,53 +144,49 @@ const pageAds=filteredAds.slice(start,end);
 pageAds.forEach((ad,i)=>{
 const tr=document.createElement('tr');
 tr.dataset.index=i+start;
-const viewClass = ad.views>400?'view-high':'';
 tr.innerHTML=`
 <td class="px-4 py-2"><input type="checkbox" class="rowCheck"/></td>
-<td class="px-6 py-4 text-sm font-medium text-gray-900 ${viewClass}" contenteditable="true">${ad.title}</td>
+<td class="px-6 py-4 text-sm font-medium text-gray-900">${ad.title}</td>
 <td class="px-6 py-4 text-sm badge ${
-ad.status==='Pending'?'badge-pending':ad.status==='Approved'?'badge-approved':
-ad.status==='Rejected'?'badge-rejected':'badge-archived'
+ad.status==='pending'?'badge-pending':ad.status==='approved'?'badge-approved':
+'badge-rejected'
 }">${ad.status}</td>
-<td class="px-6 py-4 text-sm text-gray-700 ${viewClass}" contenteditable="true">${ad.views}</td>
 <td class="px-6 py-4 text-sm text-gray-700">${ad.created}</td>
 <td class="px-6 py-4 text-center text-sm">
 <div class="flex justify-center gap-2">
-<button class="px-3 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 editBtn">Edit</button>
-<button class="px-3 py-1 text-xs font-medium text-gray-600 border border-gray-600 rounded-md hover:bg-gray-100 archiveBtn">${ad.status==='Archived'?'Restore':'Archive'}</button>
 <button class="px-3 py-1 text-xs font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50 deleteBtn">Delete</button>
 </div>
 </td>
 `;
 tr.querySelector('.rowCheck').addEventListener('change',()=> tr.querySelector('.rowCheck').checked?selectedRows.add(tr.dataset.index):selectedRows.delete(tr.dataset.index));
 
-// Edit inline
-tr.querySelector('.editBtn').addEventListener('click',()=>{
-const titleCell = tr.children[1];
-const viewsCell = tr.children[3];
-titleCell.contentEditable = !titleCell.contentEditable;
-viewsCell.contentEditable = !viewsCell.contentEditable;
-titleCell.focus();
-showToast('Click on the fields to edit. Press Enter to save.');
-});
-
-// Archive / Restore
-tr.querySelector('.archiveBtn').addEventListener('click',()=>{
-if(ad.status==='Archived') ad.status='Pending'; else ad.status='Archived';
-renderTable(); updateCharts(); renderCarousel();
-showToast(ad.status==='Archived'?'Ad Archived!':'Ad Restored!');
-});
-
 // Delete
 tr.querySelector('.deleteBtn').addEventListener('click',()=>{
-filteredAds.splice(i+start,1);
-ads=ads.filter(a=>filteredAds.includes(a));
-selectedRows.clear(); renderTable(); updateCharts(); showToast('Ad Deleted!'); renderCarousel();
+if(confirm('Are you sure you want to delete this ad?')){
+const adId = ad.ad_id;
+fetch('../backend/delete_ad.php', {
+method: 'POST',
+credentials: 'include',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ad_id: adId})
+})
+.then(r=> r.json())
+.then(d=> {
+if(d.success){ 
+showToast('Ad deleted!');
+loadData();
+} else {
+showToast('Error: ' + (d.error || 'Unknown error'));
+}
+})
+.catch(e=> showToast('Error deleting ad'));
+}
 });
 
 tableBody.appendChild(tr);
 });
-renderPagination(); updateCharts(); renderCarousel();
+renderPagination();
+updateCharts();
 }
 
 function renderPagination(){
@@ -188,7 +202,7 @@ pagination.appendChild(btn);
 }
 }
 
-// Filters, search, bulk actions & export
+// Filters, search, bulk actions
 document.querySelectorAll('.status-btn').forEach(btn=>{
 btn.addEventListener('click',()=>{
 const status=btn.dataset.status;
@@ -203,32 +217,55 @@ filteredAds=ads.filter(a=>a.title.toLowerCase().includes(val));
 currentPage=1; selectedRows.clear(); renderTable();
 });
 
-document.getElementById('sortViews').addEventListener('click',()=>{
-filteredAds.sort((a,b)=> sortAsc? a.views-b.views : b.views-a.views);
-sortAsc = !sortAsc; renderTable();
-});
-
 document.getElementById('bulkDelete').addEventListener('click',()=>{
 if(selectedRows.size===0) return showToast('No rows selected!');
+if(!confirm('Delete selected ads?')) return;
 const indexes=Array.from(selectedRows).map(Number).sort((a,b)=>b-a);
-indexes.forEach(i=> filteredAds.splice(i,1));
-ads=ads.filter(a=> filteredAds.includes(a));
-selectedRows.clear(); renderTable(); showToast('Bulk Delete Completed!'); renderCarousel();
+indexes.forEach(i=> {
+const adId = filteredAds[i].ad_id;
+fetch('../backend/delete_ad.php', {
+method: 'POST',
+credentials: 'include',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ad_id: adId})
+}).catch(e=> console.error(e));
+});
+setTimeout(()=> { loadData(); selectedRows.clear(); showToast('Bulk Delete Completed!'); }, 500);
 });
 
 document.getElementById('bulkApprove').addEventListener('click',()=>{
 if(selectedRows.size===0) return showToast('No rows selected!');
-selectedRows.forEach(i=> filteredAds[i].status='Approved'); renderTable(); showToast('Bulk Approve Completed!'); renderCarousel();
+const indexes=Array.from(selectedRows).map(Number);
+indexes.forEach(i=> {
+const adId = filteredAds[i].ad_id;
+fetch('../backend/update_ad_status.php', {
+method: 'POST',
+credentials: 'include',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ad_id: adId, status: 'approved'})
+}).catch(e=> console.error(e));
+});
+setTimeout(()=> { loadData(); selectedRows.clear(); showToast('Bulk Approve Completed!'); }, 500);
 });
 
 document.getElementById('bulkReject').addEventListener('click',()=>{
 if(selectedRows.size===0) return showToast('No rows selected!');
-selectedRows.forEach(i=> filteredAds[i].status='Rejected'); renderTable(); showToast('Bulk Reject Completed!'); renderCarousel();
+const indexes=Array.from(selectedRows).map(Number);
+indexes.forEach(i=> {
+const adId = filteredAds[i].ad_id;
+fetch('../backend/update_ad_status.php', {
+method: 'POST',
+credentials: 'include',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({ad_id: adId, status: 'rejected'})
+}).catch(e=> console.error(e));
+});
+setTimeout(()=> { loadData(); selectedRows.clear(); showToast('Bulk Reject Completed!'); }, 500);
 });
 
 document.getElementById('exportCSV').addEventListener('click',()=>{
-let csv='Title,Status,Views,Created\n';
-filteredAds.forEach(a=> csv+=`${a.title},${a.status},${a.views},${a.created}\n`);
+let csv='Title,Status,Category,Price,Created\n';
+filteredAds.forEach(a=> csv+=`${a.title},${a.status},${a.category},${a.price},${a.created}\n`);
 const blob=new Blob([csv], {type:'text/csv'});
 const link=document.createElement('a');
 link.href=URL.createObjectURL(blob); link.download='ads.csv'; link.click();
@@ -240,29 +277,43 @@ selectedRows.clear();
 checkboxes.forEach((cb,i)=> { cb.checked=e.target.checked; if(e.target.checked) selectedRows.add(i+(currentPage-1)*rowsPerPage); });
 });
 
-// Charts
+// Charts: Pie (status), Bar (most requested)
 let viewsChart, statusChart;
 function updateCharts(){
 const ctxViews=document.getElementById('viewsChart').getContext('2d');
 const ctxStatus=document.getElementById('statusChart').getContext('2d');
-const topAds=filteredAds.filter(a=>a.status!=='Archived').slice().sort((a,b)=> b.views-a.views).slice(0,5);
-const labelsViews=topAds.map(a=>a.title);
-const dataViews=topAds.map(a=>a.views);
-const statusCounts={Pending:0, Approved:0, Rejected:0, Archived:0};
-filteredAds.forEach(a=> statusCounts[a.status]++);
+
+// Bar chart: Most requested products
+const labelsMostRequested = mostRequested.map(m=> m.product_name);
+const dataMostRequested = mostRequested.map(m=> m.request_count);
+
+// Pie chart: Status distribution (only pending, approved, rejected)
+const statusLabels = Object.keys(statusCounts);
+const statusValues = Object.values(statusCounts);
+
 if(viewsChart) viewsChart.destroy();
 if(statusChart) statusChart.destroy();
+
 viewsChart = new Chart(ctxViews,{
-type:'bar', data:{ labels:labelsViews, datasets:[{label:'Views', data:dataViews, backgroundColor:'#D2691E', borderRadius:8}] },
-options:{ responsive:true, animation:{ duration:1000, easing:'easeOutBounce' }, plugins:{ legend:{ display:false } } }
+type:'bar', 
+data:{ 
+labels: labelsMostRequested.length > 0 ? labelsMostRequested : ['No Data'],
+datasets:[{label:'Requests', data: dataMostRequested.length > 0 ? dataMostRequested : [0], backgroundColor:'#D2691E', borderRadius:8}] 
+},
+options:{ responsive:true, plugins:{ legend:{ display:false } } }
 });
+
 statusChart = new Chart(ctxStatus,{
-type:'pie', data:{ labels:Object.keys(statusCounts), datasets:[{data:Object.values(statusCounts), backgroundColor:['#FFD580','#85FFBD','#FF7E5F','#C0C0C0'], hoverOffset:15}] },
+type:'pie', 
+data:{ 
+labels: statusLabels,
+datasets:[{data: statusValues, backgroundColor:['#FFD580','#85FFBD','#FF7E5F'], hoverOffset:15}] 
+},
 options:{ responsive:true, plugins:{ legend:{ position:'bottom' } }, animation:{ animateScale:true, animateRotate:true } }
 });
 }
 
-renderTable();
+loadData();
 </script>
 </body>
 </html>

@@ -78,25 +78,25 @@ tailwind.config = {
 
 <!-- SIDEBAR -->
 <aside class="w-64 bg-white border-r border-gray-200 shadow-xl p-5 flex flex-col space-y-3">
-    <h2 class="text-xl font-bold text-coffee mb-6">☕ Cafe Panel</h2>
+    <h2 class="text-xl font-bold text-coffee mb-6">☕ Cafe Owner Dashboard</h2>
 
     <a href="#" class="flex items-center px-4 py-3 rounded-lg bg-coffee text-white font-semibold shadow-md hover:scale-102 transition">
         Overview
     </a>
 
-    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
-        Browse Vendors
+    <a href="4.C4F3_Production_Catalog_Page.html" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Browse Ads
     </a>
 
-    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
-        Requests
+    <a href="10.C4F3_Owner_Dashboard.html?view=partnerships&filter=pending" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+        Partnerships
     </a>
 
-    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+    <a href="12.C4F3_Messaging_Page.html" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
         Messages
     </a>
 
-    <a href="#" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
+    <a href="13.C4FE_v5.0_User_Profile_Page.html" class="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:shadow transition">
         Profile
     </a>
 
@@ -123,106 +123,197 @@ tailwind.config = {
 <!-- METRICS -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
     <div class="bg-white p-6 rounded-xl shadow-lg card">
-        <p class="text-sm text-gray-500">Active Requests</p>
-        <h3 class="text-3xl font-bold text-coffee mt-2 counter">12</h3>
+        <p class="text-sm text-gray-500">Total Requests</p>
+        <h3 class="text-3xl font-bold text-coffee mt-2" id="statTotal">0</h3>
     </div>
     <div class="bg-white p-6 rounded-xl shadow-lg card">
-        <p class="text-sm text-gray-500">Approved</p>
-        <h3 class="text-3xl font-bold text-green-600 mt-2 counter">8</h3>
+        <p class="text-sm text-gray-500">Admin Approved</p>
+        <h3 class="text-3xl font-bold text-blue-600 mt-2" id="statAdminApproved">0</h3>
     </div>
     <div class="bg-white p-6 rounded-xl shadow-lg card">
-        <p class="text-sm text-gray-500">Pending</p>
-        <h3 class="text-3xl font-bold text-yellow-500 mt-2 counter">4</h3>
+        <p class="text-sm text-gray-500">Vendor Approved</p>
+        <h3 class="text-3xl font-bold text-green-600 mt-2" id="statVendorApproved">0</h3>
     </div>
     <div class="bg-white p-6 rounded-xl shadow-lg card">
-        <p class="text-sm text-gray-500">Vendors</p>
-        <h3 class="text-3xl font-bold text-blue-600 mt-2 counter">15</h3>
+        <p class="text-sm text-gray-500">Rejected</p>
+        <h3 class="text-3xl font-bold text-red-600 mt-2" id="statRejected">0</h3>
     </div>
 </div>
 
-<!-- CONTENT GRID -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-<!-- SUGGESTED PRODUCTS -->
-<div class="bg-white p-6 rounded-xl shadow-xl card">
-    <h2 class="text-xl font-semibold text-gray-800 mb-5">
-        Suggested Products
-    </h2>
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
-            <p class="font-medium text-gray-700">Arabica Beans</p>
-            <span class="text-xs text-gray-500">Vendor A</span>
-        </div>
-        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
-            <p class="font-medium text-gray-700">Robusta Blend</p>
-            <span class="text-xs text-gray-500">Vendor B</span>
-        </div>
-        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer card">
-            <p class="font-medium text-gray-700">Cold Brew Kit</p>
-            <span class="text-xs text-gray-500">Vendor C</span>
-        </div>
-    </div>
-</div>
-
-<!-- RECENT PARTNERSHIPS -->
+<!-- FILTER & RECENT PARTNERSHIPS -->
 <div class="bg-white p-6 rounded-xl shadow-xl card">
     <h2 class="text-xl font-semibold text-gray-800 mb-5">
         Recent Partnerships
     </h2>
+    
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-2 mb-4">
+        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition opacity-60 hover:opacity-100 bg-yellow-100 text-yellow-800" data-filter="pending">Pending</button>
+        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition opacity-60 hover:opacity-100 bg-blue-100 text-blue-800" data-filter="approved">Admin Approved</button>
+        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition opacity-60 hover:opacity-100 bg-green-100 text-green-800" data-filter="vendor_approved">Vendor Approved</button>
+        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition opacity-60 hover:opacity-100 bg-red-100 text-red-800" data-filter="rejected">Rejected</button>
+        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition opacity-60 hover:opacity-100 bg-gray-100 text-gray-800" data-filter="all">All</button>
+    </div>
 
-    <div class="space-y-4">
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition card">
-            <div>
-                <p class="font-medium text-gray-700">Vendor A</p>
-                <span class="text-xs text-green-600 font-semibold">Approved</span>
-            </div>
-            <button class="px-4 py-1.5 text-sm font-medium text-coffee border border-coffee rounded-lg gradient-btn">
-                View
-            </button>
-        </div>
-        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition card">
-            <div>
-                <p class="font-medium text-gray-700">Vendor B</p>
-                <span class="text-xs text-yellow-600 font-semibold">Pending</span>
-            </div>
-            <button class="px-4 py-1.5 text-sm font-medium text-coffee border border-coffee rounded-lg gradient-btn">
-                View
-            </button>
-        </div>
+    <div id="partnershipsList" class="space-y-4">
+        <p class="text-center text-gray-500">Loading...</p>
     </div>
 </div>
 
+</div>
+
+<!-- PRODUCT MODAL -->
+<div id="productModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div class="flex justify-between items-start">
+            <h2 class="text-xl font-bold text-gray-800" id="modalProductName">Product Details</h2>
+            <button onclick="document.getElementById('productModal').classList.add('hidden')" class="text-2xl text-gray-500 hover:text-gray-700">×</button>
+        </div>
+        
+        <div class="space-y-3">
+            <img id="modalProductImage" src="" alt="" class="w-full h-40 object-cover rounded-lg">
+            <div>
+                <p class="text-sm text-gray-500">Vendor</p>
+                <p class="text-lg font-semibold text-gray-800" id="modalVendorName">-</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Category</p>
+                <p class="text-lg font-semibold text-gray-800" id="modalCategory">-</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Price</p>
+                <p class="text-2xl font-bold text-coffee" id="modalPrice">₱0</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">Status</p>
+                <p class="text-lg font-semibold" id="modalStatus">-</p>
+            </div>
+        </div>
+        
+        <button onclick="document.getElementById('productModal').classList.add('hidden')" class="w-full bg-coffee text-white py-2 rounded-lg font-semibold hover:bg-mocha transition">
+            Close
+        </button>
+    </div>
 </div>
 </main>
 </div>
 
 <script>
-// Animated counters for metrics
-document.querySelectorAll('.counter').forEach(counter => {
-    const target = +counter.innerText;
-    counter.innerText = '0';
-    let count = 0;
-    const step = target / 40;
-    function update() {
-        count += step;
-        if(count < target){
-            counter.innerText = Math.floor(count);
-            requestAnimationFrame(update);
-        } else {
-            counter.innerText = target;
+// Get URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const currentFilter = urlParams.get('filter') || 'pending';
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: ${type === 'error' ? '#EF4444' : '#4CAF50'};
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        z-index: 1000;
+        font-weight: 600;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+function openProductModal(partnership) {
+    document.getElementById('modalProductName').textContent = partnership.product_name;
+    document.getElementById('modalProductImage').src = partnership.image_url;
+    document.getElementById('modalVendorName').textContent = partnership.vendor_name;
+    document.getElementById('modalCategory').textContent = partnership.category;
+    document.getElementById('modalPrice').textContent = '₱' + partnership.price.toLocaleString();
+    document.getElementById('modalStatus').textContent = partnership.status.replace('_', ' ').toUpperCase();
+    document.getElementById('productModal').classList.remove('hidden');
+}
+
+// Load dashboard stats
+async function loadStats() {
+    try {
+        const response = await fetch('../backend/owner_dashboard.php', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (data.error) {
+            console.error('Error:', data.error);
+            return;
         }
+        
+        document.getElementById('statTotal').textContent = data.stats.totalRequests || 0;
+        document.getElementById('statAdminApproved').textContent = data.stats.approvedRequests || 0;
+        document.getElementById('statVendorApproved').textContent = data.stats.vendorApprovedRequests || 0;
+        document.getElementById('statRejected').textContent = data.stats.rejectedRequests || 0;
+    } catch (e) {
+        console.error('Error loading stats:', e);
     }
-    update();
+}
+
+// Load partnerships list
+async function loadPartnerships(filter) {
+    try {
+        const response = await fetch(`../backend/owner_partnership_list.php?filter=${filter}`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        
+        if (data.error) {
+            showToast('Error: ' + data.error, 'error');
+            return;
+        }
+        
+        const list = document.getElementById('partnershipsList');
+        if (data.requests.length > 0) {
+            list.innerHTML = data.requests.map(req => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:shadow-md transition card">
+                    <div>
+                        <p class="font-medium text-gray-700">${req.vendor_name}</p>
+                        <p class="text-sm text-gray-600">${req.product_name}</p>
+                        <span class="text-xs font-semibold px-2 py-1 rounded ${
+                            req.status === 'approved' ? 'bg-blue-100 text-blue-700' :
+                            req.status === 'vendor_approved' ? 'bg-green-100 text-green-700' :
+                            req.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                        }">${
+                            req.status === 'approved' ? 'ADMIN APPROVED' :
+                            req.status === 'vendor_approved' ? 'VENDOR APPROVED' :
+                            req.status.replace('_', ' ').toUpperCase()
+                        }</span>
+                    </div>
+                    <button class="px-4 py-1.5 text-sm font-medium text-coffee border border-coffee rounded-lg gradient-btn" onclick='openProductModal(${JSON.stringify(req).replace(/'/g, "&apos;")})'>
+                        View
+                    </button>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = '<p class="text-center text-gray-500 py-8">No partnerships found</p>';
+        }
+    } catch (e) {
+        console.error('Error loading partnerships:', e);
+        showToast('Failed to load partnerships', 'error');
+    }
+}
+
+// Filter button handling
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', ()=> {
+        document.querySelectorAll('.filter-btn').forEach(b => b.style.opacity = '0.6');
+        btn.style.opacity = '1';
+        loadPartnerships(btn.dataset.filter);
+    });
+    
+    if (btn.dataset.filter === currentFilter) {
+        btn.style.opacity = '1';
+    }
 });
 
-// Button press feedback
-document.querySelectorAll('.gradient-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        btn.classList.add('btn-press');
-        setTimeout(()=>btn.classList.remove('btn-press'),120);
-    });
-});
+// Load initial data
+loadStats();
+loadPartnerships(currentFilter);
 </script>
 
 </body>

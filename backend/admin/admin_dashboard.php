@@ -26,13 +26,14 @@ $stmt = $db->prepare("
 $stmt->execute();
 $pendingProducts = $stmt->fetchColumn();
 
-// Total users
+// New Users (created in last 30 days)
 $stmt = $db->prepare("
     SELECT COUNT(*) 
     FROM users
+    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 ");
 $stmt->execute();
-$totalUsers = $stmt->fetchColumn();
+$newUsers = $stmt->fetchColumn();
 
 // Open partnership requests
 $stmt = $db->prepare("
@@ -42,9 +43,6 @@ $stmt = $db->prepare("
 ");
 $stmt->execute();
 $openRequests = $stmt->fetchColumn();
-
-// Flags (not implemented yet)
-$flags = 0;
 
 /* =========================
    RECENT PRODUCT ADS
@@ -90,9 +88,8 @@ $recentRequests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 echo json_encode([
     "stats" => [
         "pendingProducts" => $pendingProducts,
-        "users" => $totalUsers,
-        "openRequests" => $openRequests,
-        "flags" => $flags
+        "newUsers" => $newUsers,
+        "openRequests" => $openRequests
     ],
     "recentProducts" => $recentProducts,
     "recentRequests" => $recentRequests

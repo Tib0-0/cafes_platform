@@ -100,14 +100,14 @@ input:checked + .slider:before { transform: translateX(24px); }
 <body class="light p-6">
 
 <!-- AUTH -->
-<div id="auth" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+<div id="auth" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden">
   <div class="glass p-6 w-full max-w-sm space-y-4 text-center">
     <h2 class="text-xl font-semibold">Login</h2>
     <input id="email" placeholder="Email" class="w-full p-2 rounded">
     <select id="role" class="w-full p-2 rounded">
       <option value="admin">Admin</option>
       <option value="vendor">Vendor</option>
-      <option value="viewer">Viewer</option>
+      <option value="cafe_owner">Cafe Owner</option>
     </select>
     <input id="tenant" placeholder="Tenant ID (e.g cafe_001)" class="w-full p-2 rounded">
     <button class="btn w-full" onclick="login()">Login</button>
@@ -126,239 +126,338 @@ input:checked + .slider:before { transform: translateX(24px); }
 </div>
 
 <!-- MAIN GRID CONTAINER -->
-<div class="grid md:grid-cols-5 gap-6 w-full max-w-full">
+<div class="grid md:grid-cols-3 gap-6 w-full max-w-full">
 
-  <!-- BUSINESS INFO -->
-  <div class="glass p-6 md:col-span-3 space-y-3" id="business">
-    <h2 class="text-xl font-semibold">Business Info</h2>
-    <input id="bName" placeholder="Business Name" class="w-full p-2 rounded">
-    <input id="bRole" placeholder="Your Role" class="w-full p-2 rounded">
-    <input id="bEmail" placeholder="Email" class="w-full p-2 rounded">
-    <input id="bPhone" placeholder="Phone" class="w-full p-2 rounded">
-    <button class="btn w-full" onclick="save()">Save Changes</button>
-  </div>
-
-  <!-- PREFERENCES -->
-  <div class="glass p-6 md:col-span-2 space-y-3" id="prefs">
-    <h2 class="text-xl font-semibold">Preferences</h2>
-
-    <label class="switch-label">
-      <span class="switch">
-        <input type="checkbox" id="nEmail">
-        <span class="slider"></span>
-      </span>
-      Email Notifications
-    </label>
-
-    <label class="switch-label">
-      <span class="switch">
-        <input type="checkbox" id="nSMS">
-        <span class="slider"></span>
-      </span>
-      SMS Notifications
-    </label>
-
-    <!-- Categories Button -->
-    <div id="catsDropdown" class="glass rounded w-full cursor-pointer p-2">
-      Select Categories
+  <!-- BUSINESS INFO & PASSWORD -->
+  <div class="glass p-6 md:col-span-2 space-y-4" id="business">
+    <h2 class="text-xl font-semibold">Profile Settings</h2>
+    
+    <div>
+      <label class="text-sm font-medium block mb-2">Username</label>
+      <input id="bName" placeholder="Username" class="w-full p-2 rounded">
     </div>
 
+    <div>
+      <label class="text-sm font-medium block mb-2">Password</label>
+      <div class="flex gap-2">
+        <input id="bPassword" type="password" placeholder="Enter new password" class="flex-1 p-2 rounded">
+        <button onclick="togglePasswordVisibility()" class="glass px-3 py-2 rounded" title="Show/Hide Password">
+          <i id="pwdToggleIcon" class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+      <small class="text-gray-500">Leave blank to keep current password. Minimum 6 characters.</small>
+    </div>
+
+    <button class="btn w-full" onclick="saveChanges()">Save Changes</button>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="glass p-6 md:col-span-1 space-y-4 hidden" id="adminPanel">
+    <h2 class="text-xl font-semibold">Admin Panel</h2>
+    
+    <div>
+      <label class="text-sm font-medium block mb-2">Manage User Roles</label>
+      <select id="userSelection" class="w-full p-2 rounded" onchange="updateUserRoleOptions()">
+        <option value="">Select User</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="text-sm font-medium block mb-2">Set Role to:</label>
+      <div class="space-y-2">
+        <button class="btn w-full text-sm" onclick="changeUserRole('admin')">Make Admin</button>
+        <button class="btn w-full text-sm" onclick="changeUserRole('vendor')">Make Vendor</button>
+        <button class="btn w-full text-sm" onclick="changeUserRole('cafe_owner')">Make Cafe Owner</button>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<!-- PREVIEW MODAL -->
+<!-- CONFIRMATION MODAL -->
 <div id="overlay"></div>
 <div id="preview" class="space-y-4">
   <div class="glass p-4">
-    <h3 class="font-semibold mb-2">Business Info</h3>
+    <h3 class="font-semibold mb-2">Confirm Changes</h3>
     <p id="pvBusiness"></p>
-    <p id="pvRole"></p>
-    <p id="pvEmail"></p>
-    <p id="pvPhone"></p>
+    <p id="pvPassword"></p>
+    <p id="pvUserRole"></p>
   </div>
-  <div class="glass p-4">
-    <h3 class="font-semibold mb-2">Preferences</h3>
-    <p id="pvPrefs"></p>
-    <p id="pvCats"></p>
+  <div class="flex gap-2">
+    <button class="btn flex-1" onclick="confirmChanges()">Confirm</button>
+    <button class="btn flex-1" style="background: linear-gradient(90deg, #999, #bbb, #777);" onclick="closePreview()">Cancel</button>
   </div>
-  <button class="btn w-full" onclick="closePreview()">Close</button>
-</div>
-
-<!-- CATEGORIES POP-UP -->
-<div id="overlayCats"></div>
-<div id="popupCats" class="space-y-4">
-  <div class="glass p-4">
-    <h3 class="font-semibold mb-2">Select Categories</h3>
-    <label><span>Coffee</span><input type="checkbox" value="Coffee"></label>
-    <label><span>Bakery</span><input type="checkbox" value="Bakery"></label>
-    <label><span>Dessert</span><input type="checkbox" value="Dessert"></label>
-    <label><span>Tea</span><input type="checkbox" value="Tea"></label>
-  </div>
-  <button class="btn w-full" id="closeCats">Done</button>
 </div>
 
 <script>
-let session=null;
-let audit=[];
-const auth=document.getElementById('auth');
-const email=document.getElementById('email');
-const role=document.getElementById('role');
-const tenant=document.getElementById('tenant');
-const badge=document.getElementById('badge');
-const business=document.getElementById('business');
-const prefs=document.getElementById('prefs');
-const logoutBtn=document.getElementById('logoutBtn');
-const preview=document.getElementById('preview');
-const overlay=document.getElementById('overlay');
-const bName=document.getElementById('bName');
-const bRole=document.getElementById('bRole');
-const bEmail=document.getElementById('bEmail');
-const bPhone=document.getElementById('bPhone');
-const nEmail=document.getElementById('nEmail');
-const nSMS=document.getElementById('nSMS');
-const pvBusiness=document.getElementById('pvBusiness');
-const pvRole=document.getElementById('pvRole');
-const pvEmail=document.getElementById('pvEmail');
-const pvPhone=document.getElementById('pvPhone');
-const pvPrefs=document.getElementById('pvPrefs');
-const pvCats=document.getElementById('pvCats');
+let session = null;
+let currentUser = null;
+let allUsers = [];
+let pendingChanges = {};
 
-// Categories Pop-up
-const catsDropdown=document.getElementById("catsDropdown");
-const overlayCats=document.getElementById("overlayCats");
-const popupCats=document.getElementById("popupCats");
-const closeCatsBtn=document.getElementById("closeCats");
+// Load user profile on page load
+window.addEventListener('load', loadUserProfile);
 
-function login(){
-  if(!email.value || !tenant.value){ alert("Please enter Email and Tenant ID."); return; }
-  session={ email:email.value, role:role.value, tenant:tenant.value };
-  localStorage.setItem("jwt_demo",JSON.stringify(session));
-  auth.style.display="none";
-  badge.textContent=`Tenant: ${session.tenant} | Role: ${session.role}`;
-  applyRBAC();
-}
+async function loadUserProfile() {
+  try {
+    const response = await fetch('../backend/user_profile.php', { credentials: 'include' });
+    const data = await response.json();
+    
+    if (!response.ok) {
+      alert('Error loading profile: ' + data.error);
+      return;
+    }
 
-function applyRBAC(){
-  business.classList.remove("locked"); prefs.classList.remove("locked");
-  if(session.role==="viewer"){ business.classList.add("locked"); prefs.classList.add("locked"); }
-  if(session.role==="vendor"){ prefs.classList.add("locked"); }
-  if(session) logoutBtn.classList.remove("hidden");
-}
+    currentUser = data.user;
+    allUsers = data.allUsers || [];
+    session = { role: data.role };
 
-function log(action,payload){
-  audit.push({ tenant:session.tenant, role:session.role, user:session.email, action, payload, time:new Date().toISOString() });
-  console.table(audit);
-}
+    // Populate form
+    document.getElementById('bName').value = currentUser.username;
 
-// ================= SAVE CHANGES WITH EMAIL & PHONE VALIDATION =================
-function save(){
-  if(!bName.value){ alert("Please fill in business name."); return; }
+    // Show badge and logout button
+    document.getElementById('badge').textContent = `${currentUser.username} (${data.role})`;
+    document.getElementById('logoutBtn').classList.remove('hidden');
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if(!bEmail.value || !emailPattern.test(bEmail.value)){
-    alert("Please enter a valid email address.");
-    return;
+    // Show admin panel if user is admin
+    if (data.role === 'admin') {
+      document.getElementById('adminPanel').classList.remove('hidden');
+      populateUserSelection();
+    }
+
+    // Apply RBAC
+    applyRBAC(data.role);
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Failed to load profile');
   }
+}
 
-  const phoneDigits = bPhone.value.replace(/\D/g,''); 
-  if(bPhone.value && !/^\d+$/.test(phoneDigits)){
-    alert("Phone number must contain only digits.");
-    return;
+function applyRBAC(role) {
+  const business = document.getElementById('business');
+  if (role === 'visitor') {
+    business.classList.add('locked');
+  } else {
+    business.classList.remove('locked');
   }
+}
 
-  log("SAVE_PROFILE",{
-    business:bName.value,
-    prefs:{email:nEmail.checked,sms:nSMS.checked},
-    categories:getSelectedCats()
+function populateUserSelection() {
+  const select = document.getElementById('userSelection');
+  select.innerHTML = '<option value="">Select User</option>';
+  allUsers.forEach(user => {
+    select.innerHTML += `<option value="${user.user_id}" data-role="${user.role}">${user.username} (${user.role})</option>`;
   });
-
-  pvBusiness.textContent=`Business: ${bName.value}`;
-  pvRole.textContent=`Role: ${bRole.value || "N/A"}`;
-  pvEmail.textContent=`Email: ${bEmail.value}`;
-  pvPhone.textContent=`Phone: ${bPhone.value || "N/A"}`;
-  pvPrefs.textContent=`Notifications: ${[nEmail.checked&&"Email", nSMS.checked&&"SMS"].filter(Boolean).join(", ")||"None"}`;
-  pvCats.textContent=`Categories: ${getSelectedCats().join(", ") || "None"}`;
-
-  overlay.style.display="block";
-  preview.style.display="block";
-  requestAnimationFrame(()=> preview.classList.add("show"));
 }
 
-function closePreview(){
-  preview.classList.remove("show");
-  setTimeout(()=>{
-    preview.style.display="none";
-    overlay.style.display="none";
+function updateUserRoleOptions() {
+  const select = document.getElementById('userSelection');
+  const selectedOption = select.options[select.selectedIndex];
+  if (selectedOption.value) {
+    pendingChanges.targetUserId = selectedOption.value;
+    pendingChanges.targetUserRole = selectedOption.dataset.role;
+  }
+}
+
+function togglePasswordVisibility() {
+  const passwordInput = document.getElementById('bPassword');
+  const toggleIcon = document.getElementById('pwdToggleIcon');
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    toggleIcon.classList.remove('fa-eye');
+    toggleIcon.classList.add('fa-eye-slash');
+  } else {
+    passwordInput.type = 'password';
+    toggleIcon.classList.remove('fa-eye-slash');
+    toggleIcon.classList.add('fa-eye');
+  }
+}
+
+function saveChanges() {
+  const username = document.getElementById('bName').value.trim();
+  const password = document.getElementById('bPassword').value.trim();
+  const selectedUserId = document.getElementById('userSelection').value;
+
+  // Validation for vendor and cafe_owner
+  if (session.role !== 'admin') {
+    if (!username) {
+      alert('Please enter a username');
+      return;
+    }
+    if (username === currentUser.username && !password) {
+      alert('No changes to save');
+      return;
+    }
+  }
+
+  // Prepare confirmation message
+  let confirmMessage = '';
+  
+  if (username !== currentUser.username) {
+    confirmMessage += `Username: ${currentUser.username} → ${username}\n`;
+    pendingChanges.username = username;
+  }
+  
+  if (password) {
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+    confirmMessage += `Password: Will be changed\n`;
+    pendingChanges.password = password;
+  }
+
+  if (selectedUserId && document.getElementById('userSelection').options[document.getElementById('userSelection').selectedIndex].text) {
+    const selectedUser = allUsers.find(u => u.user_id == selectedUserId);
+    confirmMessage += `\nChange ${selectedUser.username}'s role to admin`;
+    pendingChanges.roleChange = true;
+  }
+
+  if (!confirmMessage) {
+    alert('No changes to save');
+    return;
+  }
+
+  // Show confirmation modal
+  document.getElementById('pvBusiness').textContent = confirmMessage;
+  document.getElementById('pvPassword').textContent = '';
+  document.getElementById('pvUserRole').textContent = '';
+
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('preview').style.display = 'block';
+  requestAnimationFrame(() => document.getElementById('preview').classList.add('show'));
+}
+
+async function confirmChanges() {
+  try {
+    // Update profile if username or password changed
+    if (pendingChanges.username || pendingChanges.password) {
+      const response = await fetch('../backend/update_profile.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: pendingChanges.username || null,
+          password: pendingChanges.password || null
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert('Error updating profile: ' + data.error);
+        return;
+      }
+
+      // Update current user info
+      if (pendingChanges.username) {
+        currentUser.username = pendingChanges.username;
+        document.getElementById('bName').value = pendingChanges.username;
+      }
+      document.getElementById('bPassword').value = '';
+    }
+
+    // Update user role if admin changed a user
+    if (pendingChanges.roleChange && pendingChanges.targetUserId) {
+      const response = await fetch('../backend/update_user_role.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: pendingChanges.targetUserId,
+          role: pendingChanges.newRole
+})
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert('Error updating user role: ' + data.error);
+        return;
+      }
+
+      // Reload users list
+      loadUserProfile();
+    }
+
+    alert('Changes saved successfully!');
+    closePreview();
+    pendingChanges = {};
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Failed to save changes');
+  }
+}
+
+function closePreview() {
+  document.getElementById('preview').classList.remove('show');
+  setTimeout(() => {
+    document.getElementById('preview').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
   }, 500);
 }
 
-overlay.addEventListener("click", closePreview);
+document.getElementById('overlay').addEventListener('click', closePreview);
 
-document.getElementById("themeToggle").onclick=()=>{
-  document.body.classList.toggle("dark"); 
-  document.body.classList.toggle("light");
-  document.getElementById("themeToggle").innerHTML=document.body.classList.contains("dark")?'<i class="fa-solid fa-moon"></i>':'<i class="fa-solid fa-sun"></i>';
-  localStorage.setItem("theme",document.body.className);
-}
+// Theme toggle
+document.getElementById('themeToggle').onclick = () => {
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
+  document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark') 
+    ? '<i class="fa-solid fa-moon"></i>' 
+    : '<i class="fa-solid fa-sun"></i>';
+  localStorage.setItem('theme', document.body.className);
+};
 
-logoutBtn.onclick = ()=>{
-  localStorage.removeItem("jwt_demo"); session=null;
-  auth.style.display="flex"; badge.textContent=""; business.classList.remove("locked"); prefs.classList.remove("locked"); logoutBtn.classList.add("hidden");
-  email.value=""; role.value="admin"; tenant.value="";
-  [...popupCats.querySelectorAll("input")].forEach(i=>i.checked=false); nEmail.checked=false; nSMS.checked=false;
-  updateCatsDropdownTitle();
-}
+// Logout
+document.getElementById('logoutBtn').onclick = () => {
+  localStorage.removeItem('jwt_demo');
+  session = null;
+  location.reload();
+};
 
-const saved=JSON.parse(localStorage.getItem("jwt_demo"));
-if(saved){ session=saved; auth.style.display="none"; badge.textContent=`Tenant: ${session.tenant} | Role: ${session.role}`; applyRBAC();}
-const savedTheme=localStorage.getItem("theme"); if(savedTheme) document.body.className=savedTheme;
-
-// ================= CATEGORIES POP-UP LOGIC =================
-catsDropdown.addEventListener("click", ()=>{
-  overlayCats.style.display="block";
-  popupCats.style.display="block";
-  popupCats.classList.add("show");
+document.getElementById('userSelection').addEventListener('change', () => {
+  const disabled = !document.getElementById('userSelection').value;
+  document.querySelectorAll('#adminPanel button').forEach(btn => {
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? 0.5 : 1;
+  });
 });
 
-closeCatsBtn.addEventListener("click", ()=>{
-  overlayCats.style.display="none";
-  popupCats.classList.remove("show");
-  setTimeout(()=>popupCats.style.display="none",300);
-  updateCatsDropdownTitle();
-});
+// Load saved theme
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) document.body.className = savedTheme;
 
-overlayCats.addEventListener("click", ()=>{
-  overlayCats.style.display="none";
-  popupCats.classList.remove("show");
-  setTimeout(()=>popupCats.style.display="none",300);
-  updateCatsDropdownTitle();
-});
+async function changeUserRole(role) {
+  const selectedUserId = document.getElementById('userSelection').value;
 
-function getSelectedCats(){
-  return [...popupCats.querySelectorAll("input:checked")].map(i=>i.value);
-}
-
-function updateCatsDropdownTitle(){
-  const selected = getSelectedCats();
-  catsDropdown.textContent = selected.length ? selected.join(", ") : "Select Categories";
-}
-
-// ================= PHONE AUTO-FORMAT =================
-bPhone.addEventListener("input", () => {
-  let digits = bPhone.value.replace(/\D/g, "");
-  if(digits.length > 0){
-    if(digits.length <= 3){
-      bPhone.value = `(${digits}`;
-    } else if(digits.length <= 6){
-      bPhone.value = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
-    } else {
-      bPhone.value = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
-    }
-  } else {
-    bPhone.value = "";
+  if (!selectedUserId) {
+    alert('Please select a user first');
+    return;
   }
-});
+
+  const selectedUser = allUsers.find(u => u.user_id == selectedUserId);
+
+  if (!selectedUser) {
+    alert('Invalid user selected');
+    return;
+  }
+
+  // Save to pendingChanges (for confirmation modal)
+  pendingChanges.targetUserId = selectedUserId;
+  pendingChanges.newRole = role;
+  pendingChanges.roleChange = true;
+
+  // Show confirmation message
+  document.getElementById('pvBusiness').textContent = '';
+  document.getElementById('pvPassword').textContent = '';
+  document.getElementById('pvUserRole').textContent =
+    `Change ${selectedUser.username}'s role from ${selectedUser.role} → ${role}`;
+
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('preview').style.display = 'block';
+  requestAnimationFrame(() => document.getElementById('preview').classList.add('show'));
+}
+
 </script>
 </body>
 </html>

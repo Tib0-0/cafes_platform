@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Test</title>
+</head>
+<body>
+    <h1>Session Test</h1>
+    <div id="sessionInfo">Loading...</div>
+
+    <script>
+        async function checkSession() {
+            try {
+                const response = await fetch('../backend/check_session.php');
+                const data = await response.json();
+                document.getElementById('sessionInfo').innerHTML = `
+                    <p>Logged in: ${data.logged_in}</p>
+                    <p>User ID: ${data.user_id || 'N/A'}</p>
+                    <p>Email: ${data.email || 'N/A'}</p>
+                    <p>Role: ${data.role || 'N/A'}</p>
+                `;
+            } catch (error) {
+                document.getElementById('sessionInfo').innerHTML = `
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        checkSession();
+    </script>
+</body>
+</html>
