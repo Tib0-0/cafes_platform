@@ -171,10 +171,14 @@ function renderTable(data) {
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusClass} text-center">${user.status}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.created}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                <div class="flex justify-center">
+                <div class="flex justify-center gap-2">
+
+                    <!-- TOGGLE STATUS -->
                     <button class="btn" onclick="toggleStatus(${user.id})">
-                         <i class="fas fa-ban mr-1"></i>${user.status === 'Active' ? 'Suspend' : 'Activate'}
+                        <i class="fas fa-ban mr-1"></i>
+                        ${user.status === 'Active' ? 'Suspend' : 'Activate'}
                     </button>
+
                 </div>
             </td>
         `;
