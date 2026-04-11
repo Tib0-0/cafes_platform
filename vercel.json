@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "**/*.php": {
+      "runtime": "vercel-php@0.7.1"
+    }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "/pages/3.C4F3_Homepage.html" }
+  ]
+}
