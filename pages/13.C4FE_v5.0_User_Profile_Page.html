@@ -410,9 +410,7 @@ document.getElementById('themeToggle').onclick = () => {
 
 // Logout
 document.getElementById('logoutBtn').onclick = () => {
-  localStorage.removeItem('jwt_demo');
-  session = null;
-  location.reload();
+  window.location.href = '../backend/logout.php';
 };
 
 document.getElementById('userSelection').addEventListener('change', () => {
