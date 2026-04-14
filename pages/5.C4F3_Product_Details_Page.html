@@ -67,17 +67,18 @@
 
     <!-- Product Image + Carousel -->
     <div class="glass soft-shadow p-6">
-      <div class="relative w-full h-96 mb-6 overflow-hidden rounded-xl">
-        <div id="carousel" class="flex transition-transform duration-500 touch-pan-x">
-          <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 1</div>
-          <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 2</div>
-          <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 3</div>
-        </div>
-        <button onclick="prevSlide()" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/30 text-[#6F4E37] p-2 rounded-full hover:bg-white/50 transition">&#10094;</button>
-        <button onclick="nextSlide()" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/30 text-[#6F4E37] p-2 rounded-full hover:bg-white/50 transition">&#10095;</button>
-      </div>
+  <div class="relative w-full h-[520px] mb-6 overflow-hidden rounded-xl">
+    <div id="carousel" class="flex transition-transform duration-500 touch-pan-x">
+      <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 1</div>
+      <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 2</div>
+      <div class="w-full flex-shrink-0 bg-white/20 flex items-center justify-center text-xl text-white/80 product-image">Image 3</div>
+    </div>
+    <button onclick="prevSlide()" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/30 text-[#6F4E37] p-2 rounded-full hover:bg-white/50 transition">&#10094;</button>
+    <button onclick="nextSlide()" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/30 text-[#6F4E37] p-2 rounded-full hover:bg-white/50 transition">&#10095;</button>
+  </div>
+</div>
 
-      <div class="space-y-4">
+      <!-- <div class="space-y-4">
         <div class="flex items-center justify-between p-4 bg-white/10 border border-white/20 rounded-lg feature-card">
           <span class="text-white/80">Feature A</span>
           <span class="text-[#D2691E] font-semibold">Spec</span>
@@ -91,38 +92,38 @@
           <span class="text-[#D2691E] font-semibold">Spec</span>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Product Info + Tabs -->
     <div class="glass soft-shadow p-6 flex flex-col justify-between">
       <div class="space-y-4">
         <div id="productTitle" class="w-full p-4 text-2xl font-bold text-white bg-white/10 rounded-xl text-center shadow-inner">Product Title</div>
         <div id="vendorName" class="w-full p-3 text-lg text-white/80 bg-white/10 rounded-lg text-center">Vendor Name</div>
-        <div id="productPrice" class="w-full p-3 text-xl font-semibold text-[#D2691E] bg-white/10 rounded-lg text-center">$Pricing</div>
+        <div id="productPrice" class="w-full p-3 text-xl font-semibold text-[#D2691E] bg-white/10 rounded-lg text-center">₱Pricing</div>
 
-        <div class="flex justify-center items-center space-x-1">
+        <!-- <div class="flex justify-center items-center space-x-1">
           <span class="star">&#9733;</span>
           <span class="star">&#9733;</span>
           <span class="star">&#9733;</span>
           <span class="star">&#9733;</span>
           <span class="star-empty">&#9733;</span>
-        </div>
+        </div> -->
 
         <div class="flex space-x-2 justify-center mt-4">
           <button onclick="showTab('description')" class="px-4 py-2 bg-white/10 text-white rounded-xl">Description</button>
-          <button onclick="showTab('features')" class="px-4 py-2 bg-white/10 text-white rounded-xl">Features</button>
-          <button onclick="showTab('reviews')" class="px-4 py-2 bg-white/10 text-white rounded-xl">Reviews</button>
+          <!-- <button onclick="showTab('features')" class="px-4 py-2 bg-white/10 text-white rounded-xl">Features</button>
+          <button onclick="showTab('reviews')" class="px-4 py-2 bg-white/10 text-white rounded-xl">Reviews</button> -->
         </div>
 
         <div id="description" class="tab-content p-4 bg-white/10 rounded-xl text-white/80 mt-2">
           Product description goes here. Highlight key features, flavors, or unique selling points.
         </div>
-        <div id="features" class="tab-content p-4 bg-white/10 rounded-xl text-white/80 mt-2">
+        <!-- <div id="features" class="tab-content p-4 bg-white/10 rounded-xl text-white/80 mt-2">
           Feature A, B, C details and specifications.
         </div>
         <div id="reviews" class="tab-content p-4 bg-white/10 rounded-xl text-white/80 mt-2">
           Customer reviews and ratings.
-        </div>
+        </div> -->
       </div>
 
       <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
@@ -226,10 +227,12 @@
 
     document.getElementById('productTitle').textContent = p.product_name || '';
     document.getElementById('vendorName').textContent = p.vendor_name || '';
-    document.getElementById('productPrice').textContent = p.price ? `$${p.price}` : '';
+    document.getElementById('productPrice').textContent = p.price ? `₱${p.price}` : '';
     document.getElementById('description').textContent = p.description || '';
     // features — if you store structured features, adapt here. For now reuse description excerpt
-    document.getElementById('features').textContent = p.features || '';
+    if (document.getElementById('features')) {
+  document.getElementById('features').textContent = p.features || '';
+}
     setCarouselImages(p.image_url || '');
 
     // Wire Request Partnership button to open the partnership form (no params)
