@@ -18,6 +18,7 @@ try {
       FROM product_ads pa
       LEFT JOIN users u ON pa.vendor_id = u.user_id
       WHERE pa.status = 'approved'
+      AND u.role = 'vendor'
       ORDER BY pa.product_name ASC");
 
     $stmt->execute();

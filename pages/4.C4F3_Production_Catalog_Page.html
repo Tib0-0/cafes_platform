@@ -110,36 +110,30 @@
         <!-- Category Filter -->
         <div>
           <label class="block mb-2 font-medium">Category</label>
-          <select id="categoryFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
+          <select id="categoryFilter" class="w-full p-2 rounded-lg bg-white/80 text-black">">
             <option value="">All</option>
           </select>
         </div>
 
         <!-- Price Range Filter -->
         <div>
-          <label class="block mb-2 font-medium">Price Range ($)</label>
+          <label class="block mb-2 font-medium">Price Range (₱)</label>
           <div class="flex gap-2">
-            <input type="number" id="minPrice" placeholder="Min" class="w-1/2 p-2 rounded-lg bg-white/20 text-white">
-            <input type="number" id="maxPrice" placeholder="Max" class="w-1/2 p-2 rounded-lg bg-white/20 text-white">
+            <input type="number" id="minPrice" placeholder="Min" class="w-1/2 p-2 rounded-lg bg-white/80 text-black">
+            <input type="number" id="maxPrice" placeholder="Max" class="w-1/2 p-2 rounded-lg bg-white/80 text-black">
           </div>
         </div>
 
-        <!-- Rating Filter -->
+                <!-- Vendor Filter -->
         <div>
-          <label class="block mb-2 font-medium">Rating</label>
-          <select id="ratingFilter" class="w-full p-2 rounded-lg bg-white/20 text-white">
-            <option value="">All</option>
-            <option value="5">★★★★★</option>
-            <option value="4">★★★★</option>
-            <option value="3">★★★</option>
-            <option value="2">★★</option>
-            <option value="1">★</option>
+          <label class="block mb-2 font-medium">Vendor</label>
+          <select id="vendorFilter" class="w-full p-2 rounded-lg bg-white/80 text-black">">
+            <option value="">All Vendors</option>
           </select>
         </div>
 
-        <!-- Delivery removed: not used -->
-
-        <button class="gradient-button w-full mt-4" onclick="applyFilters()">Apply Filters</button>
+        <!-- Apply Filters Button -->
+        <!-- <button class="gradient-button w-full mt-4" onclick="applyFilters()">Apply Filters</button> -->
       </aside>
 
       <!-- Product Grid -->
@@ -158,15 +152,17 @@
       const category = document.getElementById('categoryFilter').value;
       const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
       const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
-      const rating = document.getElementById('ratingFilter').value;
+      //const rating = document.getElementById('ratingFilter').value;
 
       const products = document.querySelectorAll('#productGrid > .glass');
+      const vendor = document.getElementById('vendorFilter').value;
 
       products.forEach(product => {
         const name = (product.dataset.name || '').toLowerCase();
         const productCategory = product.dataset.category || '';
         const price = parseFloat(product.dataset.price) || 0;
-        const productRating = product.dataset.rating || '';
+        const productVendor = product.dataset.vendor || '';
+       // const productRating = product.dataset.rating || '';
         const productDelivery = '';
 
         let show = true;
@@ -174,7 +170,8 @@
         if(searchValue && !name.includes(searchValue)) show = false;
         if(category && category !== productCategory) show = false;
         if(price < minPrice || price > maxPrice) show = false;
-        if(rating && rating !== productRating) show = false;
+        if (vendor && vendor !== productVendor) show = false;
+        // if(rating && rating !== productRating) show = false;
         // delivery removed
 
         product.style.display = show ? 'block' : 'none';
@@ -254,7 +251,7 @@
       card.dataset.name = product.product_name || '';
       card.dataset.category = product.category || '';
       card.dataset.price = product.price || 0;
-      card.dataset.rating = product.rating || 0;
+      card.dataset.vendor = product.vendor_name || '';
 
       const imgWrap = document.createElement('div');
       imgWrap.className = 'w-full h-40 mb-4 bg-white/10 rounded-xl flex items-center justify-center text-white/70';
@@ -284,22 +281,13 @@
       h3.textContent = product.product_name || '';
       card.appendChild(h3);
 
-      const starContainer = document.createElement('div');
-      starContainer.className = 'flex items-center mt-2 space-x-1 star-container';
-      const rating = parseInt(product.rating) || 0;
-      for (let i=1;i<=5;i++){
-        const star = document.createElement('span');
-        star.className = 'star';
-        star.innerHTML = i <= rating ? '★' : '☆';
-        starContainer.appendChild(star);
-      }
-      card.appendChild(starContainer);
+      
 
       const bottom = document.createElement('div');
       bottom.className = 'flex items-center justify-between mt-3';
       const price = document.createElement('span');
       price.className = 'text-white font-bold text-lg';
-      price.textContent = `$${product.price}`;
+      price.textContent = `₱${product.price}`;
       const cat = document.createElement('span');
       cat.className = 'px-3 py-1 bg-white/20 rounded-full text-xs text-white/80';
       cat.textContent = product.category || '';
@@ -336,6 +324,7 @@
       }
 
       const products = await fetchAllProducts();
+      populateVendorFilter(products);
       if (!products.length) {
         grid.innerHTML = '<div class="glass p-6">No approved products found.</div>';
         return;
@@ -348,6 +337,32 @@
 
     // initial load
     loadProducts();
+
+    document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+    document.getElementById('minPrice').addEventListener('input', applyFilters);
+    document.getElementById('maxPrice').addEventListener('input', applyFilters);
+    document.getElementById('vendorFilter').addEventListener('change', applyFilters);
+
+    function populateVendorFilter(products) {
+  const sel = document.getElementById('vendorFilter');
+
+  // remove old options except "All Vendors"
+  sel.querySelectorAll('option:not(:first-child)').forEach(opt => opt.remove());
+
+  const vendors = [...new Set(
+    products
+      .map(p => p.vendor_name)
+      .filter(v => v)
+  )];
+
+  vendors.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    sel.appendChild(opt);
+  });
+}
+
   </script>
 
 </body>
