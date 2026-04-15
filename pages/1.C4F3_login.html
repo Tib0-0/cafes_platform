@@ -131,7 +131,7 @@
       </p>
 
       <!-- Login Form -->
-      <form method="POST" action="../backend/C4F3_login.php" class="space-y-6">
+      <form id="loginForm" class="space-y-6">
 
         <!-- Email -->
         <div class="relative">
@@ -159,6 +159,8 @@
         </div>
 
         <!-- Login Button -->
+        <p id="errorMessage" class="text-white bg-red-600/80 px-4 py-2 rounded-lg text-center shadow-lg hidden"></p>
+
         <button type="submit"
           class="w-full gradient-button text-white py-3 font-semibold shadow-lg">
           Login
@@ -206,7 +208,34 @@
       passwordInput.type = type;
       togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
     });
+    
   </script>
+
+  <script>
+const form = document.getElementById("loginForm");
+const errorMessage = document.getElementById("errorMessage");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(form);
+
+  const response = await fetch("../backend/C4F3_login.php", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json();
+
+  if (data.status === "error") {
+    errorMessage.textContent = data.message;
+    errorMessage.classList.remove("hidden");
+  } else {
+    errorMessage.classList.add("hidden");
+    window.location.href = data.redirect;
+  }
+});
+</script>
 
 </body>
 </html>

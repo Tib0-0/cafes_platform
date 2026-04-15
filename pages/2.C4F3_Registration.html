@@ -303,10 +303,7 @@
       </div>
 
       <!-- Registration Form -->
-      <form id="registerForm"
-      method="POST"
-      action="../backend/C4F3_Registration.php"
-      class="space-y-6 animate-fade-in-up animate-delay-400">
+      <form id="registerForm" class="space-y-8">
 
           <input type="hidden" name="role" id="roleInput" value="">
 
@@ -342,6 +339,7 @@
         </div>
 
         <!-- Register Button -->
+         <p id="errorMessage" class="text-white bg-red-600/80 px-4 py-2 rounded-lg text-center hidden"></p>
         <button type="submit" class="w-full gradient-button text-white py-3 font-semibold shadow-lg hover:shadow-xl transition-all">Register</button>
 
         <!-- Social Login -->
@@ -430,12 +428,34 @@
     const modal = document.getElementById('accountModal');
     const closeModalBtn = document.getElementById('closeModal');
 
-    form.addEventListener('submit', (e) => {
+    const errorMessage = document.getElementById("errorMessage");
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
       if (passwordInput.value !== confirmInput.value) {
-  alert("Passwords do not match!");
-  e.preventDefault();
-  return;
-}
+        errorMessage.textContent = "Passwords do not match!";
+        errorMessage.classList.remove("hidden");
+        return;
+      }
+
+      const formData = new FormData(form);
+
+      const response = await fetch("../backend/C4F3_Registration.php", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.status === "error") {
+        errorMessage.textContent = data.message;
+        errorMessage.classList.remove("hidden");
+        return;
+      }
+
+      // SUCCESS
+      errorMessage.classList.add("hidden");
 
       modal.classList.add('active');
 

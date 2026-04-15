@@ -6,6 +6,12 @@
 <title>Create Product Advertisement</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
+
+select option {
+  color: black;
+  background: white;
+}
+
 body {
   background: linear-gradient(135deg, #6F4E37, #D2B48C);
 }
@@ -76,11 +82,12 @@ body {
     <!-- Step 1 -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <input id="title" name="title" type="text" placeholder="Product Title" required class="px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none" />
-      <select id="category" name="category" class="px-4 py-3 rounded-xl bg-white/20 text-white focus:ring-2 focus:ring-[#D2691E] outline-none">
+      <select id="category" name="category"  class="px-4 py-3 rounded-xl bg-white/30 text-white placeholder-white/70 focus:ring-2 focus:ring-[#D2691E] outline-none">
         <option value="">Select Category</option>
         <option value="☕ Coffee Beans">☕ Coffee Beans</option>
         <option value="🛠 Equipment">🛠 Equipment</option>
         <option value="🥛 Milk & Syrups">🥛 Milk & Syrups</option>
+        <option value="📦 Other">📦 Others</option>
       </select>
     </div>
 
@@ -91,7 +98,7 @@ body {
     </div>
 
     <!-- Live Price -->
-    <div class="text-white/90 text-sm">Live Price Preview: <span id="pricePreview" class="font-bold text-[#D2691E]">$0</span></div>
+    <div class="text-white/90 text-sm">Live Price Preview: <span id="pricePreview" class="font-bold text-[#D2691E]">₱0</span></div>
 
     <!-- Description -->
     <div>
@@ -123,7 +130,7 @@ body {
   <div class="category-badge" id="liveCategory">Category</div>
   <h3 id="liveTitle">Product Title</h3>
   <div id="liveImages"></div>
-  <p id="livePrice" class="font-bold text-[#D2691E]">$0</p>
+  <p id="livePrice" class="font-bold text-[#D2691E]">₱0</p>
   <p id="liveDesc" class="text-white/80">Product description...</p>
 </div>
 
@@ -160,8 +167,8 @@ const liveImages = document.getElementById('liveImages');
 let uploadedImages = [];
 
 priceInput.addEventListener('input', () => {
-  pricePreview.textContent = `$${priceInput.value || 0}`;
-  livePrice.textContent = `$${priceInput.value || 0}`;
+  pricePreview.textContent = `₱${priceInput.value || 0}`;
+  livePrice.textContent = `₱${priceInput.value || 0}`;
   livePreview.classList.remove('hidden');
 });
 description.addEventListener('input', () => {
@@ -220,7 +227,7 @@ document.getElementById('previewBtn').onclick = () => {
   modal.classList.remove('hidden'); modal.classList.add('flex');
   document.getElementById('mTitle').textContent = title.value;
   document.getElementById('mCategory').textContent = category.value;
-  document.getElementById('mPrice').textContent = `$${priceInput.value}`;
+  document.getElementById('mPrice').textContent = `₱${priceInput.value}`;
   document.getElementById('mDesc').textContent = description.value;
   const mImages = document.getElementById('mImages');
   mImages.innerHTML = '';

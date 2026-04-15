@@ -1,8 +1,13 @@
 <?php
+header('Content-Type: application/json');
 require_once "../config/database.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    exit("Invalid request");
+    echo json_encode([
+  "status" => "error",
+  "message" => "Invalid request"
+]);
+exit;
 }
 
 $username = trim($_POST["business_name"]); // using business name as username
@@ -12,12 +17,20 @@ $confirm  = $_POST["confirm_password"];
 $role     = $_POST["role"];
 
 if ($password !== $confirm) {
-    exit("Passwords do not match");
-}
+    echo json_encode([
+    "status" => "error",
+    "message" => "Passwords do not match"
+    ]);
+    exit;
+    }
 
 if (empty($role)) {
-    exit("Please select a role");
-}
+    echo json_encode([
+    "status" => "error",
+    "message" => "Please select a role"
+    ]);
+    exit;
+    }
 
 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
@@ -29,7 +42,11 @@ try {
     $check->execute([$email]);
 
     if ($check->rowCount() > 0) {
-        exit("Email already registered");
+        echo json_encode([
+    "status" => "error",
+    "message" => "Email already registered"
+    ]);
+    exit;
     }
 
     // Insert user
@@ -45,7 +62,10 @@ try {
         $role
     ]);
 
-    header("Location: ../pages/1.C4F3_login.html");
+    echo json_encode([
+    "status" => "success",
+    "message" => "Account created successfully"
+    ]);
     exit;
 
 } catch (PDOException $e) {
